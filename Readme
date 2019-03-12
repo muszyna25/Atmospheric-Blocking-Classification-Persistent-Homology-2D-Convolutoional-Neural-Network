@@ -1,11 +1,3 @@
-This example show how to use ML for binary classification of 1-dim function.
-
-I took MNIST digits 5 & 6 and just flattened the 28x28 arrays to 1D spectra, with the sum normalized to 100 (otherwise it would be to easy). The ML model consist of 4 1D CNN + 3 FC layers, total of 8k params.
-
-Alternative ML model w/ LSTM will be added.
-
-More info is posed here:
-https://docs.google.com/document/d/1S97Mi7wGiwguzH3Uv6D06ylWJppGGxFdzGrzQHclvFM/edit?usp=sharing
 
 INSTRUCTION:
 
