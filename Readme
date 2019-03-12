@@ -1,0 +1,35 @@
+This example show how to use ML for binary classification of 1-dim function.
+
+I took MNIST digits 5 & 6 and just flattened the 28x28 arrays to 1D spectra, with the sum normalized to 100 (otherwise it would be to easy). The ML model consist of 4 1D CNN + 3 FC layers, total of 8k params.
+
+Alternative ML model w/ LSTM will be added.
+
+More info is posed here:
+https://docs.google.com/document/d/1S97Mi7wGiwguzH3Uv6D06ylWJppGGxFdzGrzQHclvFM/edit?usp=sharing
+
+INSTRUCTION:
+
+source mySetup_nersc.source
+
+1)====== prepare train/val/test data set
+mkdir out data
+./format_Func2class.py
+
+It will result with simular data split, files stpred in data/
+
+split for dom= train X (9250, 784)
+     train Y balance:0.523
+split for dom= val X (1309, 784)
+     val Y balance:0.514
+split for dom= test X (2630, 784)
+     test Y balance:0.519
+
+2) ======== run the training over 10 epochs
+./train_Func2class.py -e 5
+
+There are 2 designes of ML avaliable:
+ --design cnn (default)
+ --design lstm  (runs 100 slower)
+
+3)= = = = =   Predicting based on trained model
+ ./predict_Func2class.py
