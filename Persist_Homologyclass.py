@@ -105,6 +105,5 @@ class Persist_Homologyclass(object):
             xobj=D[xy] #Check what this line does ????
             print('ss',xy,D[xy].shape)
             hf.create_dataset(xy, data=D[xy]) #Check what this line does too??
-        
         hf.close()
 

@@ -65,6 +65,12 @@ ph=Persist_Homologyclass(0)
 ecmwf_data_path='/global/cscratch1/sd/muszyng/ethz_data/ecmwf_data/' # Name of one file that I have: ECMWF_1979_Jan.nc
 varname = ['pv', 'z', 't', 'u']; y1=0; y2=100; x1=0; x2=100; indx = 0; timestep = 70; var_netcdf = np.array([]); norm = 'cosine'; maxdim = 1;
 path = ecmwf_data_path
+
+'''TO DO: 
+    1) Next step will be to put below code in one/two functions.
+    2) Also, I need to do hdf files saving automatically.
+    3) Plotting input raw examples, including barcodes and pdgms.'''
+    
 fns_list=ph.generate_list_of_files(path)
 print(fns_list)
 
