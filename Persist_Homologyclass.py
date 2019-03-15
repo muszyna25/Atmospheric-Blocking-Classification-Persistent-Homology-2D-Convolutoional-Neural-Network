@@ -7,17 +7,13 @@ from scipy.spatial.distance import pdist, squareform
 import h5py
 
 class Persist_Homologyclass(object):
-    def __init__(self, datapath, varname):
+    def __init__(self, datapath, varname, norm='cosine', maxdim=1):
         self.datapath=datapath
         self.varname=varname
-        self.norm = 'cosine'
-        self.maxdim = 1
+        self.norm = norm
+        self.maxdim = maxdim
         self.fn_list = []
         self.list_new_data = []
-        self.train_set = {"X": np.ndarray([]), "Y": np.array([])}
-        self.val_set = {"X": np.ndarray([]), "Y": np.array([])}
-        self.test_set = {"X": np.ndarray([]), "Y": np.array([])}
-        #self.outputData = {}
         self.outputData={dom:{'X': np.ndarray([]),'Y':np.array([])} for dom in ['train','val','test']}
         
     def create_file_list(self, st_offset):
@@ -116,32 +112,37 @@ class Persist_Homologyclass(object):
             hf.create_dataset(xy, data=D[xy]) #Check what this line does too??
         hf.close()
 
-    def save_dict_to_hdf5(self, D):
+    def save_dict_to_hdf5(self, dataList):
         #self.outputData={dom:{'X': np.ndarray([]),'Y':np.array([])} for dom in ['train','val','test']}
-        '''TO DO: save data for all sets.''' 
+        sizeTrain=0.7
+        sizeVal=0.2
+        sizeTest=0.1
+        nImgs=len(dataList)
+        nTrain=round(nImgs*sizeTrain)
+        nVal=round(nImgs*sizeVal)
+        nTest=round(nImgs*sizeTest)
+        
+        self.outputData['train']["X"] = np.array(dataList[0:nTrain]) # ~%80 training--2d histograms.
+        self.outputData['train']["Y"] = np.array([a%2 for a in range(0, nTrain)]) #Training set of labels.
+
+        self.outputData['val']["X"] = np.array(dataList[nTrain:nTrain+nVal]) # ~10% validation set--2d histograms.
+        self.outputData['val']["Y"] = np.array([a%2 for a in range(0, nTrain+nVal)]) #Validation set of labels.
+
+        self.outputData['test']["X"] = np.array(dataList[nTrain+nVal:]) # ~10% testing set--2d histograms.
+        self.outputData['test']["Y"] = np.array([a%2 for a in range(0, nTrain+nVal+nTest)]) #Testing set of labels.
+
         for ktvt in self.outputData:
-            hf = h5py.File(ktvt + '.hd5', 'w')
+            hf=h5py.File(ktvt + '.hd5', 'w')
             for xy in self.outputData[ktvt]:
-                hf.create_dataset(xy, data=self.outputData[ktvt][xy])
+                hf.create_dataset(xy, data=self.outputData[ktvt][xy]) #ktvt is the first key, xy is the key as dictionary.
             hf.close()
-                
-        '''
-        func2class_train = {"X": np.ndarray([]), "Y": np.array([])}
 
-        func2class_train["X"] = np.array(list_new_data[0:1500]) # ~%80 training--2d histograms.
-        func2class_train["Y"] = np.array([a%2 for a in range(0, 1500)]) #Training set of labels.
-
-        func2class_val["X"] = np.array(list_new_data[1501:1700]) # ~10% validation set--2d histograms.
-        func2class_val["Y"] = np.array([a%2 for a in range(1501, 1700)]) #Validation set of labels.
-
-        func2class_test["X"] = np.array(list_new_data[1701:]) # ~10% testing set--2d histograms.
-        func2class_test["Y"] = np.array([a%2 for a in range(1701, 1888)]) #Testing set of labels.
-
-        #Save all three dictionaries to seperate hdf5 format files.
-        save_to_hdf5_(func2class_train, '/global/cscratch1/sd/muszyng/ethz_data/ecmwf_data/tzfunc2class_train')
-        save_to_hdf5_(func2class_val, '/global/cscratch1/sd/muszyng/ethz_data/ecmwf_data/tzfunc2class_val')
-        save_to_hdf5_(func2class_test, '/global/cscratch1/sd/muszyng/ethz_data/ecmwf_data/tzfunc2class_test')
-        '''
+    def load_hdf5_file(self, inputFile): # Load data to check if it was saved properly.
+        h5f=h5py.File(inputFile, 'r')
+        for k in h5f.keys():
+            obj=h5f[k][:]
+            print(obj.shape)
+        h5f.close()
 
     def generate_data_list(self):
         print('generate_data_list')

@@ -47,12 +47,14 @@ args=get_parser()
 gra=Plotter_Func2class(args)
 
 ecmwf_data_path='/global/cscratch1/sd/muszyng/ethz_data/ecmwf_data/' # Name of one file that I have: ECMWF_1979_Jan.nc
-varname = 'pv'
-ph=Persist_Homologyclass(ecmwf_data_path, varname)
-ph.generate_list_of_files()
-ph.generate_data_list()
-print(len(ph.list_new_data))
-#ph.save_to_hdf5_()
+varname='pv'
+ph=Persist_Homologyclass(ecmwf_data_path, varname) # You can specify max homology dimension and metric for distance matrix.
+#ph.generate_list_of_files()
+#ph.generate_data_list()
+#print(len(ph.list_new_data))
+outputListData=[np.random.random((10, 10)) for i in range(1888)] # List of fake 2d histograms (10x10). 
+ph.save_dict_to_hdf5(outputListData)
+ph.load_hdf5_file('train.hd5')
 
 #deep=Deep_Func2class(**vars(args))
 #deep.read_mnist_raw()
@@ -63,10 +65,9 @@ print(len(ph.list_new_data))
 #if args.funcDim=='func1dim':
 #    gra.plot_input(deep.data['val'],range(10),'func',7)
 
-#gra.display_all('form')
+gra.display_all('form') #This is to plot all collected figures.
 
 #................................
 '''TO DO: 
-    2) Also, I need to do hdf files saving automatically.
     3) Plotting input raw examples, including barcodes and pdgms.
 '''    
