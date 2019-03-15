@@ -43,53 +43,30 @@ def get_parser():
 #=================================
 args=get_parser()
 
-'''
+
 gra=Plotter_Func2class(args)
 
-deep=Deep_Func2class(**vars(args))
-deep.read_mnist_raw()
-deep.select_digits_and_split([5,6]) # give 2 digits you want to train on
-deep.save_input_hdf5()
-gra.plot_input_raw(deep,range(6))
-gra.plot_input(deep.data['val'],range(10),'digit',6)
-if args.funcDim=='func1dim':
-    gra.plot_input(deep.data['val'],range(10),'func',7)
+ecmwf_data_path='/global/cscratch1/sd/muszyng/ethz_data/ecmwf_data/' # Name of one file that I have: ECMWF_1979_Jan.nc
+varname = 'pv'
+ph=Persist_Homologyclass(ecmwf_data_path, varname)
+ph.generate_list_of_files()
+ph.generate_data_list()
+print(len(ph.list_new_data))
+#ph.save_to_hdf5_()
 
-gra.display_all('form')
-'''
+#deep=Deep_Func2class(**vars(args))
+#deep.read_mnist_raw()
+#deep.select_digits_and_split([5,6]) # give 2 digits you want to train on
+#deep.save_input_hdf5()
+#gra.plot_input_raw(deep,range(6))
+#gra.plot_input(deep.data['val'],range(10),'digit',6)
+#if args.funcDim=='func1dim':
+#    gra.plot_input(deep.data['val'],range(10),'func',7)
+
+#gra.display_all('form')
 
 #................................
-
-ph=Persist_Homologyclass(0)
-
-ecmwf_data_path='/global/cscratch1/sd/muszyng/ethz_data/ecmwf_data/' # Name of one file that I have: ECMWF_1979_Jan.nc
-varname = ['pv', 'z', 't', 'u']; y1=0; y2=100; x1=0; x2=100; indx = 0; timestep = 70; var_netcdf = np.array([]); norm = 'cosine'; maxdim = 1;
-path = ecmwf_data_path
-
 '''TO DO: 
-    1) Next step will be to put below code in one/two functions.
     2) Also, I need to do hdf files saving automatically.
-    3) Plotting input raw examples, including barcodes and pdgms.'''
-    
-fns_list=ph.generate_list_of_files(path)
-print(fns_list)
-
-list_new_data = []
-for i in range(0, len(fns_list)):
-    fd=ph.read_netcdf_file(path, fns_list[i], varname[0])
-    print('File:', fns_list[i])
-    for j in range(0, len(fd)):
-        print('Timestep: %d' %j)
-        img = fd[j] #Gets an image from a file.
-        img = ph.preprocessing_norm_stand(img) #Normalizes & standardizes data.
-        l_imgs = ph.extract_subimages(img, 4) #Extracts eight subimages.
-        for k in range(0, len(l_imgs)):
-            #if k % 2 == 0:
-            #I = add_rnd_noise(l_imgs[k]) #Adds randomness to create the second class of objects in the input raw data.    
-            I = l_imgs[k]
-            dgms = ph.PH_func_call(I, norm, maxdim) #Computes H1 homologies.
-            new_repres_img = ph.hist_data(dgms) #Computes 2d histogram.
-            if k%2 == 0:
-                np.random.shuffle(new_repres_img) #Adds randomness to every second 2d histogram.
-            list_new_data.append(new_repres_img)
-
+    3) Plotting input raw examples, including barcodes and pdgms.
+'''    

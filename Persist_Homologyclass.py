@@ -7,8 +7,18 @@ from scipy.spatial.distance import pdist, squareform
 import h5py
 
 class Persist_Homologyclass(object):
-    def __init__(self, dimension):
-        self.dimension = dimension
+    def __init__(self, datapath, varname):
+        self.datapath=datapath
+        self.varname=varname
+        self.norm = 'cosine'
+        self.maxdim = 1
+        self.fn_list = []
+        self.list_new_data = []
+        self.train_set = {"X": np.ndarray([]), "Y": np.array([])}
+        self.val_set = {"X": np.ndarray([]), "Y": np.array([])}
+        self.test_set = {"X": np.ndarray([]), "Y": np.array([])}
+        #self.outputData = {}
+        self.outputData={dom:{'X': np.ndarray([]),'Y':np.array([])} for dom in ['train','val','test']}
         
     def create_file_list(self, st_offset):
         list_of_files = []
@@ -22,14 +32,14 @@ class Persist_Homologyclass(object):
         file_list = sorted(list_of_files, key = lambda x: x.split('_')[1]) # For ERA-Interim data.
         return file_list
 
-    def generate_list_of_files(self, data_path):
+    def generate_list_of_files(self):
         cwd = os.getcwd() 
-        os.chdir(data_path)
+        os.chdir(self.datapath)
         # Creates file list and sorts it based on the extracted information from file name. 
         # E.g., arg 'st_offset = 6' must be adjusted to the file name format of specific datasets.
-        fn_list = self.create_file_list(6)         
-        return fn_list
-    
+        self.fn_list = self.create_file_list(6)         
+        print(self.fn_list)
+  
     def read_netcdf_file(self, path, fname, varname): #Variables names: e.g., 'lon', 'lat', 'prw'
         fh = Dataset(path + fname, mode='r')
         var_netcdf = fh.variables[varname][:] #Retrieves a given variable by name.
@@ -102,8 +112,54 @@ class Persist_Homologyclass(object):
     def save_to_hdf5_(self, D, name): #D is dictionary.
         hf = h5py.File(name + '.hd5', 'w')
         for xy in D: #Loops over element in the dictionary.
-            xobj=D[xy] #Check what this line does ????
             print('ss',xy,D[xy].shape)
             hf.create_dataset(xy, data=D[xy]) #Check what this line does too??
         hf.close()
+
+    def save_dict_to_hdf5(self, D):
+        #self.outputData={dom:{'X': np.ndarray([]),'Y':np.array([])} for dom in ['train','val','test']}
+        '''TO DO: save data for all sets.''' 
+        for ktvt in self.outputData:
+            hf = h5py.File(ktvt + '.hd5', 'w')
+            for xy in self.outputData[ktvt]:
+                hf.create_dataset(xy, data=self.outputData[ktvt][xy])
+            hf.close()
+                
+        '''
+        func2class_train = {"X": np.ndarray([]), "Y": np.array([])}
+
+        func2class_train["X"] = np.array(list_new_data[0:1500]) # ~%80 training--2d histograms.
+        func2class_train["Y"] = np.array([a%2 for a in range(0, 1500)]) #Training set of labels.
+
+        func2class_val["X"] = np.array(list_new_data[1501:1700]) # ~10% validation set--2d histograms.
+        func2class_val["Y"] = np.array([a%2 for a in range(1501, 1700)]) #Validation set of labels.
+
+        func2class_test["X"] = np.array(list_new_data[1701:]) # ~10% testing set--2d histograms.
+        func2class_test["Y"] = np.array([a%2 for a in range(1701, 1888)]) #Testing set of labels.
+
+        #Save all three dictionaries to seperate hdf5 format files.
+        save_to_hdf5_(func2class_train, '/global/cscratch1/sd/muszyng/ethz_data/ecmwf_data/tzfunc2class_train')
+        save_to_hdf5_(func2class_val, '/global/cscratch1/sd/muszyng/ethz_data/ecmwf_data/tzfunc2class_val')
+        save_to_hdf5_(func2class_test, '/global/cscratch1/sd/muszyng/ethz_data/ecmwf_data/tzfunc2class_test')
+        '''
+
+    def generate_data_list(self):
+        print('generate_data_list')
+        for i in range(0, len(self.fn_list)):
+            fd=self.read_netcdf_file(self.datapath, self.fn_list[i], self.varname)
+            print('File:', self.fn_list[i])
+            for j in range(0, len(fd)):
+                print('Timestep: %d' % j)
+                img = fd[j] #Gets an image from a file.
+                img = self.preprocessing_norm_stand(img) #Normalizes & standardizes data.
+                l_imgs = self.extract_subimages(img, 4) #Extracts eight subimages.
+                for k in range(0, len(l_imgs)):
+                    #if k % 2 == 0: #I = add_rnd_noise(l_imgs[k]) #Adds randomness to create the second class of objects in the input raw data.    
+                    I = l_imgs[k]
+                    dgms = self.PH_func_call(I, self.norm, self.maxdim) #Computes H1 homologies.
+                    new_repres_img = self.hist_data(dgms) #Computes 2d histogram.
+                    if k%2 == 0:
+                        np.random.shuffle(new_repres_img) #Adds randomness to every second 2d histogram.
+                    self.list_new_data.append(new_repres_img)
+
 
