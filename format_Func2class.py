@@ -49,12 +49,16 @@ gra=Plotter_Func2class(args)
 ecmwf_data_path='/global/cscratch1/sd/muszyng/ethz_data/ecmwf_data/' # Name of one file that I have: ECMWF_1979_Jan.nc
 varname='pv'
 ph=Persist_Homologyclass(ecmwf_data_path, varname) # You can specify max homology dimension and metric for distance matrix.
-#ph.generate_list_of_files()
-#ph.generate_data_list()
-#print(len(ph.list_new_data))
-outputListData=[np.random.random((10, 10)) for i in range(1888)] # List of fake 2d histograms (10x10). 
-ph.save_dict_to_hdf5(outputListData)
-ph.load_hdf5_file('train.hd5')
+ph.generate_list_of_files()
+ph.generate_data_list()
+print(len(ph.list_new_data))
+outputListData = ph.list_new_data.copy()
+print(len(outputListData))
+#outputListData=[np.random.random((100, 100)) for i in range(1888)] # List of fake 2d histograms (10x10). 
+#ph.save_dict_to_hdf5(outputListData)
+#ph.load_hdf5_file('train.hd5')
+gra.plot_multiple_imgs(outputListData, range(8))
+#gra.plot_multiple_imgs(ph.list_new_data, range(8))
 
 #deep=Deep_Func2class(**vars(args))
 #deep.read_mnist_raw()

@@ -74,6 +74,85 @@ class Plotter_Func2class(object):
             ax.imshow(X[i], cmap=self.plt.get_cmap('gray'))
             j+=1
 
+#####........My code....................    
+    def show_patch(self, M, figsizx, figsizy): #For example, y:[0:160] x:[0:320]
+        plt.clf()
+        plt.figure(figsize = (figsizx,figsizy))
+        plt.imshow(M, interpolation='bilinear') #It does blinear interpolation of data to display image.
+        plt.axis('off') #Turns off the ticks on both axises.
+        plt.show()
+
+#.......................................
+    def plot_barcode_and_pers_dgm(self, dgms, indx):
+        for dim in range(0, len(dgms)):
+            dgm = dgms[dim]
+            if dim==0:
+                data = dgm[0:-1][:] #If H_0, it skips the bar with Inf.
+            else:
+                data = dgm[:] #Takes all data for the given H_N dimension.
+    
+            offset = 0 #Sets the vertical offset between bars (lines) for persistence barcode plot.
+            no = data.shape[0] #Gets number of points (lines/bars).
+    
+            fig = plt.figure(figsize=(8,8)) #Sets a figure for both subplots.
+    
+            '''Plot persistence barcode.'''
+            ax = fig.add_subplot(2,2,1)
+            ax.autoscale(enable=True) #Adjusts the scale of axes automatically.
+            ax.xaxis.set_major_formatter(FormatStrFormatter('%g')) #Adjusts the format of ticks in both automatically.
+    
+            for i in range(0, data.shape[0]):
+                ax.hlines(y=0.1+offset, xmin=data[i][0], xmax=data[i][1], linestyle='-', linewidth=1, color='k') #Plots all horizontal lines/bars.
+                offset += 0.09 #Shifts each line/bar by the fixed offset.
+        
+            plt.title('Barcode: H%i | No of bars: %i' %(dim, no))
+            plt.yticks([]) #Sets no ticks on y-axis.
+            plt.grid(True) #Sets grid on.
+        
+            fig.savefig('H0_Barcode_Persistence_Diagram_' + indx + '.png')
+        
+            '''Plot persistence diagram.'''
+            ax = fig.add_subplot(2,2,2)
+            ax.autoscale(enable=True)
+            ax.xaxis.set_major_formatter(FormatStrFormatter('%g'))
+            for i in range(0, data.shape[0]):
+                ax.scatter(x=data[i][0], y=data[i][1], c='k') #Plots all points (x-birth of feature, y-death of feature) on the diagram.
+
+            plt.title('Persistence diagram: H%i | No of points: %i' %(dim, no))
+            plt.grid(True)
+
+            plt.subplots_adjust(wspace=0.7) #Adjusts white space between the subplots.
+            fig.show()
+            fig.savefig('H1_Barcode_Persistence_Diagram_' + indx + '.png')
+
+#............................
+    def compute_histogram(self, dgms, indx):
+        fig = plt.figure(figsize=(12,8))
+        for dim in range(0, len(dgms)):
+            dgm = dgms[dim]
+            lbars = compute_bars_lengths(dgm)
+            ax = fig.add_subplot(2,2,1+dim)
+            n, bins, patches = plt.hist(x=lbars, bins=30, density=True, log=True, color='#0504aa', alpha=0.7, rwidth=0.85)
+            plt.grid(axis='y', alpha=0.75)
+            plt.xlabel('Value')
+            plt.ylabel('Frequency')
+            plt.title('Histogram for H%i' %dim)
+            maxfreq = n.max()
+            plt.ylim(top=np.ceil(maxfreq / 10) * 10 if maxfreq % 10 else maxfreq + 10) #Sets a clean upper y-axis limit.
+
+#............................
+    def plot_multiple_imgs(self, l_imgs, idxL, figId=9):
+        figId=self.smart_append(figId)
+        fig=self.plt.figure(figId, facecolor='white', figsize=(8,8))
+        n=len(l_imgs); #no_imgs = int(np.round(n/2));
+        j=0;  
+        nrow,ncol=int(len(idxL)/2),2
+        for i in idxL: 
+            ax = self.plt.subplot(nrow, ncol, j+1)
+            ax.imshow(l_imgs[i], interpolation='bilinear', cmap='viridis') #Plots multiple subimages next to each other.
+            j+=1
+    
+#####........My code....................    
 
 #............................
     def plot_input(self,XY,idxL,mode,figId=7):

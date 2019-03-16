@@ -146,7 +146,7 @@ class Persist_Homologyclass(object):
 
     def generate_data_list(self):
         print('generate_data_list')
-        for i in range(0, len(self.fn_list)):
+        for i in range(1, len(self.fn_list)):
             fd=self.read_netcdf_file(self.datapath, self.fn_list[i], self.varname)
             print('File:', self.fn_list[i])
             for j in range(0, len(fd)):
