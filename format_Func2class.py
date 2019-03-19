@@ -41,43 +41,65 @@ def get_parser():
 #  M A I N 
 #=================================
 #=================================
+
+#............................
 args=get_parser()
 
-
+#............................
 gra=Plotter_Func2class(args)
 
+#............................
 ecmwf_data_path='/global/cscratch1/sd/muszyng/ethz_data/ecmwf_data/' # Name of one file that I have: ECMWF_1979_Jan.nc
 varname='pv'
-ph=Persist_Homologyclass(ecmwf_data_path, varname) # You can specify max homology dimension and metric for distance matrix.
+ecmwf_labeled_data_path='/global/cscratch1/sd/muszyng/ethz_data/labels/'
+
+#............................
+ph=Persist_Homologyclass(ecmwf_data_path, ecmwf_labeled_data_path, varname) # You can specify max homology dimension and metric for distance matrix.
+
 ph.generate_list_of_files()
 ph.generate_data_list()
-print(len(ph.list_new_data))
-outputListData = ph.list_new_data.copy()
-print(len(outputListData))
+ph.generate_labeled_data_list()
+print(ph.Y_labels)
+
+#............................
 #outputListData=[np.random.random((100, 100)) for i in range(1888)] # List of fake 2d histograms (10x10). 
 #ph.save_dict_to_hdf5(outputListData)
 #ph.load_hdf5_file('train.hd5')
-#gra.plot_multiple_imgs(outputListData, range(8))
+#gra.plot_global_img(ph.l_globalimgs, 0)
+#gra.plot_multiple_imgs(ph.l_imgs, range(8))
+#gra.plot_multiple_histograms(0, ph.l_dgms, range(8)) 
+#gra.plot_multiple_histograms(1, ph.l_dgms, range(8)) 
+#gra.plot_multiple_barcodes(1, ph.l_dgms, range(8))
+#gra.plot_multiple_diagrams(1, ph.l_dgms, range(8))
 
-gra.plot_global_img(ph.l_globalimgs, 0)
-gra.plot_multiple_imgs(ph.l_imgs, range(8))
-gra.plot_multiple_histograms(0, ph.l_dgms, range(8)) 
-gra.plot_multiple_histograms(1, ph.l_dgms, range(8)) 
-gra.plot_multiple_barcodes(1, ph.l_dgms, range(8))
-gra.plot_multiple_diagrams(1, ph.l_dgms, range(8))
-
-#deep=Deep_Func2class(**vars(args))
-#deep.read_mnist_raw()
-#deep.select_digits_and_split([5,6]) # give 2 digits you want to train on
-#deep.save_input_hdf5()
-#gra.plot_input_raw(deep,range(6))
-#gra.plot_input(deep.data['val'],range(10),'digit',6)
-#if args.funcDim=='func1dim':
-#    gra.plot_input(deep.data['val'],range(10),'func',7)
+#gra.plot_global_img(ph.labels_l_globalimgs, 0)
+#gra.plot_multiple_imgs(ph.labels_l_imgs, range(8))
 
 gra.display_all('form') #This is to plot all collected figures.
 
-#................................
-'''TO DO: 
-    3) Plotting input raw examples, including barcodes and pdgms.
-'''    
+#............................
+
+
+
+
+
+
+
+
+
+
+
+
+
+'''
+deep=Deep_Func2class(**vars(args))
+deep.read_mnist_raw()
+deep.select_digits_and_split([5,6]) # give 2 digits you want to train on
+deep.save_input_hdf5()
+gra.plot_input_raw(deep,range(6))
+gra.plot_input(deep.data['val'],range(10),'digit',6)
+if args.funcDim=='func1dim':
+    gra.plot_input(deep.data['val'],range(10),'func',7)
+gra.display_all('form') #This is to plot all collected figures.
+'''
+

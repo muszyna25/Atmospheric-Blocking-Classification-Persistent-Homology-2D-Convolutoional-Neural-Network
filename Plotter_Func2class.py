@@ -174,7 +174,8 @@ class Plotter_Func2class(object):
                 dR = np.array([np.around((x[1]-x[0])/2, decimals=8) for x in dgm])
                 mR = np.array([np.around((x[1]+x[0])/2, decimals=8) for x in dgm])
                 ax = self.plt.subplot(nrow, ncol, j+1)
-                nbin = np.linspace(0,0.5,28) #Here we set number of bins (2d cells) so in fact it sets up the size of image (e.g., from 0 to 0.5).
+                #nbin = np.linspace(0,0.5,28) #Here we set number of bins (2d cells) so in fact it sets up the size of image (e.g., from 0 to 0.5).
+                nbin = np.linspace(0,0.2,28) #Here we set number of bins (2d cells) so in fact it sets up the size of image (e.g., from 0 to 0.5).
                 ax.hist2d(dR, mR, bins=nbin)
                 #ax.hist2d(dR, mR, bins=nbin, norm=mcolors.PowerNorm([0.8]))
                 self.plt.xlabel('dR=(death - birth)/2')

@@ -7,9 +7,10 @@ from scipy.spatial.distance import pdist, squareform
 import h5py
 
 class Persist_Homologyclass(object):
-    def __init__(self, datapath, varname, norm='cosine', maxdim=1):
+    def __init__(self, datapath, labeled_data_path, varname, norm='cosine', maxdim=1):
         self.datapath=datapath
         self.varname=varname
+        self.labeled_data_path=labeled_data_path
         self.norm = norm
         self.maxdim = maxdim
         self.fn_list = []
@@ -19,9 +20,13 @@ class Persist_Homologyclass(object):
         self.l_imgs = []
         self.l_dgms = []
         self.l_globalimgs = []
+        self.labels_l_imgs = []
+        self.labels_fn_list = []         
+        self.labels_l_globalimgs = []
+        self.Y_labels = []
         
 #............................
-    def create_file_list(self, st_offset):
+    def create_file_list(self, st_offset, debug):
         list_of_files = []
         for root, dirs, files in os.walk('.'):  # Walks through all files in the given directory.
             for filename in files:
@@ -30,17 +35,28 @@ class Persist_Homologyclass(object):
                     # file_list = sorted(list_of_files, key = lambda x: x.split('.')[0][st_offset:]) 
                     # Sort file list by extracted 'year' from the file name. 
                     # E.g., arg 'st_offset' must be adjusted to the file name format of specific datasets.
-        file_list = sorted(list_of_files, key = lambda x: x.split('_')[1]) # For ERA-Interim data.
+        if(debug):
+            file_list = sorted(list_of_files, key = lambda x: x.split('_')[1]) # For ERA-Interim data.
+        else: file_list = list_of_files
         return file_list
 
 #............................
     def generate_list_of_files(self):
+        debug_raw = True
         cwd = os.getcwd() 
         os.chdir(self.datapath)
         # Creates file list and sorts it based on the extracted information from file name. 
         # E.g., arg 'st_offset = 6' must be adjusted to the file name format of specific datasets.
-        self.fn_list = self.create_file_list(6)         
+        self.fn_list = self.create_file_list(6, debug_raw)         
         print(self.fn_list)
+
+        debug_label = False
+        cwd = os.getcwd() 
+        os.chdir(self.labeled_data_path)
+        # Creates file list and sorts it based on the extracted information from file name. 
+        # E.g., arg 'st_offset = 6' must be adjusted to the file name format of specific datasets.
+        self.labels_fn_list = self.create_file_list(6, debug_label)         
+        print(self.labels_fn_list)
   
 #............................
     def read_netcdf_file(self, path, fname, varname): #Variables names: e.g., 'lon', 'lat', 'prw'
@@ -180,5 +196,37 @@ class Persist_Homologyclass(object):
                     if k%2 == 0:
                         np.random.shuffle(new_repres_img) #Adds randomness to every second 2d histogram.
                     self.list_new_data.append(new_repres_img)
+
+#............................
+    def assign_label(self, l_imgs, threshold):
+        y = []
+        th = threshold * int(l_imgs[0].shape[0]*l_imgs[0].shape[1])
+        #print('Threshold: %i' %th)
+        for i in range(0, len(l_imgs)):
+            l = list(l_imgs[i].flatten())
+            no_ones = l.count(1)
+            print('Threshold: %i vs number of ones: %i' %(th, no_ones))
+            if no_ones >= th:
+                y.extend([1])
+            else:
+                y.extend([0])
+        return y
+#............................
+    def generate_labeled_data_list(self):       '''TO DO: Figure out why global images are upside down'''
+        print('generate_labeled_data_list')
+        for i in range(0, len(self.labels_fn_list)):
+            fd=self.read_netcdf_file(self.labeled_data_path, self.labels_fn_list[i], 'FLAG') # Variable name is fixed for these files.
+            print('File:', self.labels_fn_list[i])
+            for j in range(1446, len(fd)):
+                print('Timestep: %d' % j)
+                img = fd[j]
+                self.labels_l_globalimgs.append(img) # Store global binary images.
+                l_subimages = self.extract_subimages(img, 4) # Extracts eight subimages.
+                self.labels_l_imgs.extend(l_subimages)
+                l_y = self.assign_label(l_subimages, 0.01) # Start with 10% of pixels as ones (1's).
+                self.Y_labels.extend(l_y)
+
+
+
 
 
