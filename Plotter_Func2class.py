@@ -2,6 +2,7 @@
 from sklearn.metrics import roc_curve, auc
 import numpy as np
 from keras.utils import plot_model
+import matplotlib.colors as mcolors
 
 
 __author__ = "Jan Balewski"
@@ -40,7 +41,7 @@ class Plotter_Func2class(object):
                 self.plt.tight_layout()
                 figName='%s/%s_%d'%(self.outPath,self.prjName,fid)
                 print('Graphics saving to %s  ...'%figName)
-                self.plt.savefig(figName+'.png')
+                self.plt.savefig('/global/homes/m/muszyng/project-cnn-tda/cnn-project/histo_2_binaryClassifier/'+figName+'.png')
         self.plt.show()
 
 # figId=self.smart_append(figId)
@@ -75,70 +76,113 @@ class Plotter_Func2class(object):
             j+=1
 
 #####........My code....................    
-    def show_patch(self, M, figsizx, figsizy): #For example, y:[0:160] x:[0:320]
-        plt.clf()
-        plt.figure(figsize = (figsizx,figsizy))
-        plt.imshow(M, interpolation='bilinear') #It does blinear interpolation of data to display image.
-        plt.axis('off') #Turns off the ticks on both axises.
-        plt.show()
 
-#.......................................
-    def plot_barcode_and_pers_dgm(self, dgms, indx):
-        for dim in range(0, len(dgms)):
-            dgm = dgms[dim]
-            if dim==0:
-                data = dgm[0:-1][:] #If H_0, it skips the bar with Inf.
-            else:
-                data = dgm[:] #Takes all data for the given H_N dimension.
-    
+#............................
+    def plot_multiple_diagrams(self, dim, l_dgms, idxL, figId=13):
+        figId = self.smart_append(figId)
+        fig = self.plt.figure(figId, facecolor='white', figsize=(8,8))
+        j=0; nrow, ncol=int(len(idxL)/2),2
+        fig.suptitle('Diagrams: H%i' %dim, fontsize=12)
+
+        for i in idxL:
+            if dim == 0: 
+                elem = l_dgms[i]
+                data = elem[dim][:-1]
+            else: 
+                elem = l_dgms[i]
+                data = elem[dim][:]
+
+            no = len(data) #Gets number of points (lines/bars).
+
+            #Plot persistence diagrams.
+            ax = self.plt.subplot(nrow, ncol, j+1)
+            #ax.autoscale(enable=True) #Adjusts the scale of axes automatically.
+            for i in range(0, no):
+                ax.scatter(x=data[i][0], y=data[i][1], c='k') #Plots all points (x-birth of feature, y-death of feature) on the diagram.
+
+            ax.plot(np.linspace(0,1,100), np.linspace(0,1,100), color='green', linewidth=1)
+            self.plt.title('Diagram: H%i | No of points: %i' %(dim, no))
+            self.plt.xlabel('Birth')
+            self.plt.ylabel('Death')
+            self.plt.grid(True) #Sets grid on.
+            ax.set_title('%i' %j)
+            j+=1
+        
+#............................
+    def plot_multiple_barcodes(self, dim, l_dgms, idxL, figId=12):
+        figId = self.smart_append(figId)
+        fig = self.plt.figure(figId, facecolor='white', figsize=(8,8))
+        j=0; nrow, ncol=int(len(idxL)/2),2
+        fig.suptitle('Barcodes: H%i' %dim, fontsize=12)
+
+        for i in idxL:
+            if dim == 0: 
+                elem = l_dgms[i]
+                data = elem[dim][:-1]
+            else: 
+                elem = l_dgms[i]
+                data = elem[dim][:]
+
             offset = 0 #Sets the vertical offset between bars (lines) for persistence barcode plot.
-            no = data.shape[0] #Gets number of points (lines/bars).
-    
-            fig = plt.figure(figsize=(8,8)) #Sets a figure for both subplots.
-    
-            '''Plot persistence barcode.'''
-            ax = fig.add_subplot(2,2,1)
+            no = len(data) #Gets number of points (lines/bars).
+
+            #Plot persistence barcode.
+            ax = self.plt.subplot(nrow, ncol, j+1)
             ax.autoscale(enable=True) #Adjusts the scale of axes automatically.
-            ax.xaxis.set_major_formatter(FormatStrFormatter('%g')) #Adjusts the format of ticks in both automatically.
-    
-            for i in range(0, data.shape[0]):
+            for i in range(0, no):
                 ax.hlines(y=0.1+offset, xmin=data[i][0], xmax=data[i][1], linestyle='-', linewidth=1, color='k') #Plots all horizontal lines/bars.
                 offset += 0.09 #Shifts each line/bar by the fixed offset.
         
-            plt.title('Barcode: H%i | No of bars: %i' %(dim, no))
-            plt.yticks([]) #Sets no ticks on y-axis.
-            plt.grid(True) #Sets grid on.
+            #self.plt.title('Barcode: H%i | No of bars: %i' %(dim, no))
+            self.plt.xlabel('Threshold (parameter)')
+            self.plt.ylabel('Betti number')
+            self.plt.yticks([]) #Sets no ticks on y-axis.
+            self.plt.grid(True) #Sets grid on.
+            ax.set_title('%i (No. of bars: %i)' %(j,no))
+            j+=1
         
-            fig.savefig('H0_Barcode_Persistence_Diagram_' + indx + '.png')
-        
-            '''Plot persistence diagram.'''
-            ax = fig.add_subplot(2,2,2)
-            ax.autoscale(enable=True)
-            ax.xaxis.set_major_formatter(FormatStrFormatter('%g'))
-            for i in range(0, data.shape[0]):
-                ax.scatter(x=data[i][0], y=data[i][1], c='k') #Plots all points (x-birth of feature, y-death of feature) on the diagram.
-
-            plt.title('Persistence diagram: H%i | No of points: %i' %(dim, no))
-            plt.grid(True)
-
-            plt.subplots_adjust(wspace=0.7) #Adjusts white space between the subplots.
-            fig.show()
-            fig.savefig('H1_Barcode_Persistence_Diagram_' + indx + '.png')
-
 #............................
-    def compute_histogram(self, dgms, indx):
-        fig = plt.figure(figsize=(12,8))
-        for dim in range(0, len(dgms)):
-            dgm = dgms[dim]
-            lbars = compute_bars_lengths(dgm)
-            ax = fig.add_subplot(2,2,1+dim)
-            n, bins, patches = plt.hist(x=lbars, bins=30, density=True, log=True, color='#0504aa', alpha=0.7, rwidth=0.85)
-            plt.grid(axis='y', alpha=0.75)
-            plt.xlabel('Value')
-            plt.ylabel('Frequency')
-            plt.title('Histogram for H%i' %dim)
-            maxfreq = n.max()
-            plt.ylim(top=np.ceil(maxfreq / 10) * 10 if maxfreq % 10 else maxfreq + 10) #Sets a clean upper y-axis limit.
+    def plot_multiple_histograms(self, dim, l_dgms, idxL, figId=11): 
+        figId = self.smart_append(figId)
+        fig = self.plt.figure(figId, facecolor='white', figsize=(8,8))
+        j=0; nrow, ncol=int(len(idxL)/2),2
+        fig.suptitle('Histograms: H%i' %dim, fontsize=12)
+
+        if dim == 0:
+            print('Dim 0 - 1d Histogram')
+            for i in idxL:
+                elem = l_dgms[i]
+                dgm = elem[dim][:-1]
+                lbars = np.array([np.around((x[1]-x[0]), decimals=8) for x in dgm]) 
+                ax = self.plt.subplot(nrow, ncol, j+1)
+                #nbin = np.linspace(0,0.5,28) #Here we set number of bins (2d cells) so in fact it sets up the size of image (e.g., from 0 to 0.5).
+                nbin = 28
+                n, bins, patches = ax.hist(x=lbars, bins=nbin, density=True, log=True, alpha=0.7, rwidth=0.85)
+                self.plt.grid(axis='y', alpha=0.75)
+                self.plt.xlabel('Value')
+                self.plt.ylabel('Frequency')
+                #self.plt.title('Histogram of H%i' %dim)
+                maxfreq = n.max()
+                self.plt.ylim(top=np.ceil(maxfreq / 10) * 10 if maxfreq % 10 else maxfreq + 10) #Sets a clean upper y-axis limit.
+                ax.set_title('%i' %j)
+                j+=1
+        else:
+            print('Dim 1 - 2d Histogram')
+            for i in idxL:
+                elem = l_dgms[i]
+                dgm = elem[dim][:]
+                dR = np.array([np.around((x[1]-x[0])/2, decimals=8) for x in dgm])
+                mR = np.array([np.around((x[1]+x[0])/2, decimals=8) for x in dgm])
+                ax = self.plt.subplot(nrow, ncol, j+1)
+                nbin = np.linspace(0,0.5,28) #Here we set number of bins (2d cells) so in fact it sets up the size of image (e.g., from 0 to 0.5).
+                ax.hist2d(dR, mR, bins=nbin)
+                #ax.hist2d(dR, mR, bins=nbin, norm=mcolors.PowerNorm([0.8]))
+                self.plt.xlabel('dR=(death - birth)/2')
+                self.plt.ylabel('dS=(birth + death)/2')
+                #self.plt.title('Histogram of H%i' %dim)
+                #self.plt.colorbar(ax=ax)
+                ax.set_title('%i' %j)
+                j+=1
 
 #............................
     def plot_multiple_imgs(self, l_imgs, idxL, figId=9):
@@ -147,11 +191,21 @@ class Plotter_Func2class(object):
         n=len(l_imgs); #no_imgs = int(np.round(n/2));
         j=0;  
         nrow,ncol=int(len(idxL)/2),2
+        fig.suptitle('Extracted subimages', fontsize=12)
         for i in idxL: 
             ax = self.plt.subplot(nrow, ncol, j+1)
-            ax.imshow(l_imgs[i], interpolation='bilinear', cmap='viridis') #Plots multiple subimages next to each other.
+            ax.imshow(l_imgs[i], interpolation='bilinear') #Plots multiple subimages next to each other.
+            ax.set_title('%i' %j)
             j+=1
-    
+
+#............................
+    def plot_global_img(self, l_globalimgs, indx, figId=14):
+        figId=self.smart_append(figId)
+        fig=self.plt.figure(figId, facecolor='white', figsize=(8,8))
+        fig.suptitle('Global image', fontsize=12)
+        ax0 = self.plt.subplot(1, 1, 1)
+        ax0.imshow(l_globalimgs[indx], interpolation='bilinear') #It does blinear interpolation of data to display image.
+
 #####........My code....................    
 
 #............................

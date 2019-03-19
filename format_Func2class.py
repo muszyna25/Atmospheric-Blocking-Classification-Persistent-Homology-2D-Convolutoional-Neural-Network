@@ -57,8 +57,14 @@ print(len(outputListData))
 #outputListData=[np.random.random((100, 100)) for i in range(1888)] # List of fake 2d histograms (10x10). 
 #ph.save_dict_to_hdf5(outputListData)
 #ph.load_hdf5_file('train.hd5')
-gra.plot_multiple_imgs(outputListData, range(8))
-#gra.plot_multiple_imgs(ph.list_new_data, range(8))
+#gra.plot_multiple_imgs(outputListData, range(8))
+
+gra.plot_global_img(ph.l_globalimgs, 0)
+gra.plot_multiple_imgs(ph.l_imgs, range(8))
+gra.plot_multiple_histograms(0, ph.l_dgms, range(8)) 
+gra.plot_multiple_histograms(1, ph.l_dgms, range(8)) 
+gra.plot_multiple_barcodes(1, ph.l_dgms, range(8))
+gra.plot_multiple_diagrams(1, ph.l_dgms, range(8))
 
 #deep=Deep_Func2class(**vars(args))
 #deep.read_mnist_raw()
