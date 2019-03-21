@@ -113,6 +113,8 @@ class Persist_Homologyclass(object):
         #print('Original ', M.shape)
         D = pdist(M, norm) #Computes all the pairwise distances.
         SD = squareform(D) #Forms a matrix from the vector with pairwise distances.
+        n = SD.shape
+        #print('Number of points: ', n)
         return SD
 
 #............................
@@ -181,7 +183,7 @@ class Persist_Homologyclass(object):
         for i in range(1, len(self.fn_list)):
             fd=self.read_netcdf_file(self.datapath, self.fn_list[i], self.varname)
             print('File:', self.fn_list[i])
-            for j in range(100, len(fd)):
+            for j in range(109, len(fd)):
                 print('Timestep: %d' % j)
                 img = fd[j] #Gets an image from a file.
                 self.l_globalimgs.append(img)
@@ -205,19 +207,19 @@ class Persist_Homologyclass(object):
         for i in range(0, len(l_imgs)):
             l = list(l_imgs[i].flatten())
             no_ones = l.count(1)
-            print('Threshold: %i vs number of ones: %i' %(th, no_ones))
+            #print('Threshold: %i vs number of ones: %i' %(th, no_ones))
             if no_ones >= th:
                 y.extend([1])
             else:
                 y.extend([0])
         return y
 #............................
-    def generate_labeled_data_list(self):       '''TO DO: Figure out why global images are upside down'''
-        print('generate_labeled_data_list')
+    def generate_labeled_data_list(self): 
+        #print('generate_labeled_data_list')
         for i in range(0, len(self.labels_fn_list)):
             fd=self.read_netcdf_file(self.labeled_data_path, self.labels_fn_list[i], 'FLAG') # Variable name is fixed for these files.
             print('File:', self.labels_fn_list[i])
-            for j in range(1446, len(fd)):
+            for j in range(1457, len(fd)):
                 print('Timestep: %d' % j)
                 img = fd[j]
                 self.labels_l_globalimgs.append(img) # Store global binary images.

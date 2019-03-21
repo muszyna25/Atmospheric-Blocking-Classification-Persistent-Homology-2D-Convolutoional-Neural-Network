@@ -335,7 +335,7 @@ class Deep_Func2class(object):
     def load_weights(self,name):
         start = time.time()
         outF5m=self.prjName+'.%s.h5'%name
-        print('load  weights  from',outF5m,end='... ')
+        # print('load  weights  from',outF5m,end='... ')
         self.model.load_weights(outF5m) # creates mode from HDF5
         print('loaded, elaT=%.2f sec'%(time.time() - start))
         

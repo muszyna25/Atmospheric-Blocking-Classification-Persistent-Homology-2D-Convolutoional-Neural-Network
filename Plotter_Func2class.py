@@ -3,6 +3,7 @@ from sklearn.metrics import roc_curve, auc
 import numpy as np
 from keras.utils import plot_model
 import matplotlib.colors as mcolors
+import matplotlib as mpl
 
 
 __author__ = "Jan Balewski"
@@ -125,6 +126,7 @@ class Plotter_Func2class(object):
 
             offset = 0 #Sets the vertical offset between bars (lines) for persistence barcode plot.
             no = len(data) #Gets number of points (lines/bars).
+            #print('Number of bars in H0: %i' %no)
 
             #Plot persistence barcode.
             ax = self.plt.subplot(nrow, ncol, j+1)
@@ -175,13 +177,23 @@ class Plotter_Func2class(object):
                 mR = np.array([np.around((x[1]+x[0])/2, decimals=8) for x in dgm])
                 ax = self.plt.subplot(nrow, ncol, j+1)
                 #nbin = np.linspace(0,0.5,28) #Here we set number of bins (2d cells) so in fact it sets up the size of image (e.g., from 0 to 0.5).
-                nbin = np.linspace(0,0.2,28) #Here we set number of bins (2d cells) so in fact it sets up the size of image (e.g., from 0 to 0.5).
-                ax.hist2d(dR, mR, bins=nbin)
+                nbin = np.linspace(0,0.1,30) #Here we set number of bins (2d cells) so in fact it sets up the size of image (e.g., from 0 to 0.5).
+                #ax.hist2d(dR, mR, bins=nbin, normed=True)
+                #ax.hist2d(dR, mR, norm=mpl.colors.LogNorm())
+                
+                x_bins = np.logspace(np.log10(dR.min()), np.log10(dR.max()), np.sqrt(dR.shape[0]))
+                y_bins = np.logspace(np.log10(mR.min()), np.log10(mR.max()), np.sqrt(mR.shape[0]))
+                ax.hist2d(dR, mR, bins=[x_bins, y_bins])
+                ax.set_xscale('log')
+                ax.set_yscale('log')                
+
                 #ax.hist2d(dR, mR, bins=nbin, norm=mcolors.PowerNorm([0.8]))
                 self.plt.xlabel('dR=(death - birth)/2')
                 self.plt.ylabel('dS=(birth + death)/2')
                 #self.plt.title('Histogram of H%i' %dim)
                 #self.plt.colorbar(ax=ax)
+                #self.plt.yscale('log', nonposy='clip')
+                #self.plt.xscale('log', nonposx='clip')
                 ax.set_title('%i' %j)
                 j+=1
 
