@@ -145,11 +145,11 @@ class Plotter_Func2class(object):
             j+=1
         
 #............................
-    def plot_multiple_2d_histograms(self, ph, idxL, figId = 23): 
+    def plot_multiple_2d_histograms(self, ph, idxL, figId=23): 
         figId = self.smart_append(figId)
-        fig = self.plt.figure(figId, facecolor = 'white', figsize = (12,8))
+        fig = self.plt.figure(figId, facecolor='white', figsize=(12,8))
         fig.suptitle(r'2D Histograms of persistent homology in dim one ($H_{1}$)' '\n' 
-                r'$\Delta r=\dfrac{death - birth}{2}$' '\n' r'$\bar{r}=\dfrac{birth + death}{2}$', fontsize = 8)
+                r'$\Delta r=\dfrac{death - birth}{2}$' '\n' r'$\bar{r}=\dfrac{birth + death}{2}$', fontsize=8)
         j = 0; nrow, ncol = int(len(idxL)/2),2
         dict_units = {'pv': '($K \ m^{2} \ kg^{-1} \ s^{-1}$)'} # Dict. of units for plotting. Extend it in the future...
         l_dgms = ph.l_dgms # Get list of persistence diagrams (barcodes) from the object class. 
@@ -173,31 +173,28 @@ class Plotter_Func2class(object):
             j+=1
 
 #............................
-    def plot_multiple_1d_histograms(self, ph, idxL, figId = 23): 
+    def plot_multiple_1d_histograms(self, ph, idxL, figId=24): 
         figId = self.smart_append(figId)
-        fig = self.plt.figure(figId, facecolor = 'white', figsize = (12,8))
-        fig.suptitle('Histograms of homology in dim one (H%i) \n dR=(death - birth)/2 \n  dS=(birth+death)/2' %dim, fontsize = 8)
+        fig = self.plt.figure(figId, facecolor='white', figsize=(14,8))
+        fig.suptitle(r'1D Histograms of persistent homology in dim zero ($H_{0}$)' '\n' r'$\Delta R = death - birth$', fontsize = 8)
         j = 0; nrow, ncol = int(len(idxL)/2),2
-        dict_units = {'pv': '($K \ m^{2} \ kg^{-1} \ s^{-1}$)'} # Dict. of units for plotting. Extend it in the future...
         l_dgms = ph.l_dgms # Get list of persistence diagrams (barcodes) from the object class. 
+        nbin = np.linspace(0,0.5,28) # Set no. of bins, it sets up the size of x-axis (e.g., from 0 to 0.5).
         
-        if dim == 0:
-            print('Dim 0 - 1d Histogram')
-            for i in idxL:
-                elem = l_dgms[i]
-                dgm = elem[dim][:-1]
-                lbars = np.array([np.around((x[1]-x[0]), decimals=8) for x in dgm]) 
-                ax = self.plt.subplot(nrow, ncol, j+1)
-                #nbin = np.linspace(0,0.5,28) #Here we set number of bins (2d cells) so in fact it sets up the size of image (e.g., from 0 to 0.5).
-                nbin = 28
-                n, bins, patches = ax.hist(x=lbars, bins=nbin, density=True, log=True, alpha=0.7, rwidth=0.85)
-                self.plt.grid(axis='y', alpha=0.75)
-                self.plt.xlabel('Value')
-                self.plt.ylabel('Frequency')
-                maxfreq = n.max()
-                self.plt.ylim(top=np.ceil(maxfreq / 10) * 10 if maxfreq % 10 else maxfreq + 10) #Sets a clean upper y-axis limit.
-                ax.set_title('%i' %j)
-                j+=1
+        print('[+] Dim 0 - 1d Histograms')
+        for i in idxL:
+            elem = l_dgms[i]
+            dgm = elem[0][:-1] # Get H0 diagrams from the list and skip the infinity bar.
+            lbars = np.array([np.around((x[1]-x[0]), decimals=8) for x in dgm]) # Compute lengths of bars. 
+            ax = self.plt.subplot(nrow, ncol, j+1)
+            n, bins, patches = ax.hist(x=lbars, bins=nbin, density=True, log=True, alpha=0.7, rwidth=0.85, edgecolor='k', align='mid')
+            self.plt.grid(axis='y', alpha=0.75)
+            self.plt.xlabel(r'$\Delta R$', fontsize=7)
+            self.plt.ylabel('Frequency', fontsize=7)
+            maxfreq = n.max()
+            self.plt.ylim(top=np.ceil(maxfreq / 10) * 10 if maxfreq % 10 else maxfreq + 10) #Sets a clean upper y-axis limit.
+            ax.set_title('ID: %i; Class: %i' %(j, 000) + '\n' + r'$\mu= %0.3f, \sigma= %0.3f$' %(np.mean(lbars), np.std(lbars))) # Set class and Id once data label generating is done.
+            j+=1
 
 #............................
     def plot_multiple_imgs(self, l_imgs, idxL, figId=9):
