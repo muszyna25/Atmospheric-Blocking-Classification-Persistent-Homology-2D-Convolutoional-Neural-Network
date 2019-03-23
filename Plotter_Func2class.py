@@ -80,11 +80,12 @@ class Plotter_Func2class(object):
 #####........My code....................    
 
 #............................
-    def plot_multiple_diagrams(self, dim, l_dgms, idxL, figId=13):
+    def plot_multiple_diagrams(self, dim, ph, idxL, figId=21):
         figId = self.smart_append(figId)
         fig = self.plt.figure(figId, facecolor='white', figsize=(8,8))
         j=0; nrow, ncol=int(len(idxL)/2),2
         fig.suptitle('Diagrams: H%i' %dim, fontsize=12)
+        l_dgms = ph.l_dgms # Get list of persistence diagrams (barcodes) from the object class. 
 
         for i in idxL:
             if dim == 0: 
@@ -111,11 +112,12 @@ class Plotter_Func2class(object):
             j+=1
         
 #............................
-    def plot_multiple_barcodes(self, dim, l_dgms, idxL, figId=12):
+    def plot_multiple_barcodes(self, dim, ph, idxL, figId=22):
         figId = self.smart_append(figId)
         fig = self.plt.figure(figId, facecolor='white', figsize=(8,8))
         j=0; nrow, ncol=int(len(idxL)/2),2
         fig.suptitle('Barcodes: H%i' %dim, fontsize=12)
+        l_dgms = ph.l_dgms # Get list of persistence diagrams (barcodes) from the object class. 
 
         for i in idxL:
             if dim == 0: 
@@ -127,8 +129,6 @@ class Plotter_Func2class(object):
 
             offset = 0 #Sets the vertical offset between bars (lines) for persistence barcode plot.
             no = len(data) #Gets number of points (lines/bars).
-            #print('Number of bars in H0: %i' %no)
-
             #Plot persistence barcode.
             ax = self.plt.subplot(nrow, ncol, j+1)
             ax.autoscale(enable=True) #Adjusts the scale of axes automatically.
@@ -136,12 +136,12 @@ class Plotter_Func2class(object):
                 ax.hlines(y=0.1+offset, xmin=data[i][0], xmax=data[i][1], linestyle='-', linewidth=1, color='k') #Plots all horizontal lines/bars.
                 offset += 0.09 #Shifts each line/bar by the fixed offset.
         
-            #self.plt.title('Barcode: H%i | No of bars: %i' %(dim, no))
             self.plt.xlabel('Threshold (parameter)')
             self.plt.ylabel('Betti number')
             self.plt.yticks([]) #Sets no ticks on y-axis.
             self.plt.grid(True) #Sets grid on.
-            ax.set_title('%i (No. of bars: %i)' %(j,no))
+            ax.set_title('ID: %i; Class: %i; (No. of bars: %i)' %(j, 000, no))
+            self.plt.xlim(0,1)
             j+=1
         
 #............................
@@ -197,10 +197,10 @@ class Plotter_Func2class(object):
 
 #............................
     def plot_multiple_imgs(self, ph, idxL, figId=25):
-        figId=self.smart_append(figId)
-        fig=self.plt.figure(figId, facecolor='white', figsize=(8,8))
-        n=len(ph.l_imgs); #no_imgs = int(np.round(n/2));
-        j=0; nrow,ncol=int(len(idxL)/2),2
+        figId = self.smart_append(figId)
+        fig = self.plt.figure(figId, facecolor='white', figsize=(8,8))
+        n = len(ph.l_imgs); #no_imgs = int(np.round(n/2));
+        j = 0; nrow,ncol=int(len(idxL)/2),2
         fig.suptitle('Extracted subimages' + '\n' + 'Variable name: %s, unit: %s' %(ph.varname, self.dict_units[ph.varname]), fontsize=7)
         for i in idxL: 
             ax = self.plt.subplot(nrow, ncol, j+1)

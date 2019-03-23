@@ -78,6 +78,10 @@ class Persist_Homologyclass(object):
         img = preprocessing.normalize(img)
         scaler = preprocessing.StandardScaler()
         img = scaler.fit_transform(img)
+        
+        #X = img - np.mean(img, axis=0)
+        #img = X/np.std(img, axis=0)
+        
         return img
 
 #............................
@@ -195,11 +199,13 @@ class Persist_Homologyclass(object):
                 print('Timestep: %d' % j)
                 img = fd[j] #Gets an image from a file.
                 self.l_globalimgs.append(img)
-                #img = self.preprocessing_norm_stand(img) #Normalizes & standardizes data.
-                self.l_imgs.extend(self.extract_subimages(img, 4)) #Extracts eight subimages.
+                #img = self.preprocessing_norm_stand(img) #Normalizes & standardizes data..
+                imgs = self.extract_subimages(img, 4)
+                self.l_imgs.extend(imgs) #Extracts eight subimages.
                 for k in range(0, len(self.l_imgs)):
                     #if k % 2 == 0: #I = add_rnd_noise(l_imgs[k]) #Adds randomness to create second class of objects in the input raw data.
                     I = self.l_imgs[k]
+                    I = self.preprocessing_norm_stand(I) #Normalizes & standardizes data.
                     self.dgms = self.PH_func_call(I, self.norm, self.maxdim) #Computes H1 homologies.
                     self.l_dgms.append(self.dgms)
                     new_repres_img = self.hist_data(self.dgms) #Computes 2d histogram.

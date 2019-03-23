@@ -53,36 +53,37 @@ ecmwf_data_path='/global/cscratch1/sd/muszyng/ethz_data/ecmwf_data/' # Name of o
 varname='pv'
 ecmwf_labeled_data_path='/global/cscratch1/sd/muszyng/ethz_data/labels/'
 
+'''These two are for testing'''
+#out=ph.read_netcdf_file_('/global/cscratch1/sd/muszyng/ethz_data/ecmwf_download/batch_scripts/', 'ERA_INTERIM_1979.nc', 'pv') #Variables names: e.g., 'lon', 'lat', 'prw'
+#outputListData=[np.random.random((100, 100)) for i in range(1888)] # List of fake 2d histograms (10x10). 
+
 #............................
 ph=Persist_Homologyclass(ecmwf_data_path, ecmwf_labeled_data_path, varname) # You can specify max homology dimension and metric for distance matrix.
 
 ph.generate_list_of_files()
 ph.generate_data_list()
-#ph.generate_labeled_data_list()
-#print(ph.Y_labels)
-
-#out=ph.read_netcdf_file_('/global/cscratch1/sd/muszyng/ethz_data/ecmwf_download/batch_scripts/', 'ERA_INTERIM_1979.nc', 'pv') #Variables names: e.g., 'lon', 'lat', 'prw'
-#print(out.shape)
+ph.generate_labeled_data_list()
 
 #............................
-#outputListData=[np.random.random((100, 100)) for i in range(1888)] # List of fake 2d histograms (10x10). 
+'''These two need to be fixed'''
 #ph.save_dict_to_hdf5(ph.outputData)
 #ph.load_hdf5_file('train.hd5')
+
+''' Fixed plotting global image and subimages
 gra.plot_global_img(ph, 0)
 gra.plot_multiple_imgs(ph, range(8))
+'''
 
 ''' Fixed plotting histograms
 gra.plot_multiple_1d_histograms(ph, range(8)) 
 gra.plot_multiple_2d_histograms(ph, range(8)) 
 '''
 
-#gra.plot_multiple_barcodes(0, ph.l_dgms, range(8))
-#gra.plot_multiple_diagrams(1, ph.l_dgms, range(8))
-
-#print(ph.l_globalimgs[0].shape)
-#gra.plot_global_img(ph.labels_l_globalimgs, 0)
-#print(ph.labels_l_globalimgs[0].shape)
-#gra.plot_multiple_imgs(ph.labels_l_imgs, range(8))
+''' Fixed plotting barcodes and diagrams
+gra.plot_multiple_barcodes(0, ph, range(8))
+gra.plot_multiple_barcodes(1, ph, range(8))
+gra.plot_multiple_diagrams(1, ph, range(8))
+'''
 
 gra.display_all('form') #This is to plot all collected figures.
 
