@@ -5,6 +5,7 @@ from sklearn import preprocessing
 from ripser import ripser
 from scipy.spatial.distance import pdist, squareform
 import h5py
+import math
 
 class Persist_Homologyclass(object):
     def __init__(self, datapath, labeled_data_path, varname, norm='cosine', maxdim=1):
@@ -62,7 +63,14 @@ class Persist_Homologyclass(object):
     def read_netcdf_file(self, path, fname, varname): #Variables names: e.g., 'lon', 'lat', 'prw'
         fh = Dataset(path + fname, mode='r')
         var_netcdf = fh.variables[varname][:] #Retrieves a given variable by name.
-        #print(fname, var_netcdf.shape)
+        return var_netcdf
+
+#............................
+    def read_netcdf_file_(self, path, fname, varname): #Variables names: e.g., 'lon', 'lat', 'prw'
+        fh = Dataset(path + fname, mode='r')
+        var_netcdf = fh.variables[varname][:] #Retrieves a given variable by name.
+        #print(fh.dimensions)
+        #print(fh.variables)
         return var_netcdf
 
 #............................
@@ -228,6 +236,16 @@ class Persist_Homologyclass(object):
                 l_y = self.assign_label(l_subimages, 0.01) # Start with 10% of pixels as ones (1's).
                 self.Y_labels.extend(l_y)
 
+#............................
+    def compute_deltaR_midR(self, root_degree, dgm, scale_flag):
+        if scale_flag:
+            dR = np.array([math.pow(np.around((x[1]-x[0])/2.0, decimals=8),1.0/root_degree) for x in dgm]) # ()
+            mR = np.array([math.pow(np.around((x[1]+x[0])/2.0, decimals=8),1.0/root_degree) for x in dgm])
+        else:
+            dR = np.array([np.around((x[1]-x[0])/2, decimals=8) for x in dgm])
+            mR = np.array([np.around((x[1]+x[0])/2, decimals=8) for x in dgm])
+
+        return (dR, mR)
 
 
 

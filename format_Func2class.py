@@ -58,21 +58,26 @@ ph=Persist_Homologyclass(ecmwf_data_path, ecmwf_labeled_data_path, varname) # Yo
 
 ph.generate_list_of_files()
 ph.generate_data_list()
-ph.generate_labeled_data_list()
-print(ph.Y_labels)
+#ph.generate_labeled_data_list()
+#print(ph.Y_labels)
+
+#out=ph.read_netcdf_file_('/global/cscratch1/sd/muszyng/ethz_data/ecmwf_download/batch_scripts/', 'ERA_INTERIM_1979.nc', 'pv') #Variables names: e.g., 'lon', 'lat', 'prw'
+#print(out.shape)
 
 #............................
 #outputListData=[np.random.random((100, 100)) for i in range(1888)] # List of fake 2d histograms (10x10). 
-#ph.save_dict_to_hdf5(outputListData)
+#ph.save_dict_to_hdf5(ph.outputData)
 #ph.load_hdf5_file('train.hd5')
 #gra.plot_global_img(ph.l_globalimgs, 0)
 #gra.plot_multiple_imgs(ph.l_imgs, range(8))
 #gra.plot_multiple_histograms(0, ph.l_dgms, range(8)) 
-gra.plot_multiple_histograms(1, ph.l_dgms, range(8)) 
+gra.plot_multiple_2d_histograms(ph, range(8)) 
 #gra.plot_multiple_barcodes(0, ph.l_dgms, range(8))
 #gra.plot_multiple_diagrams(1, ph.l_dgms, range(8))
 
+#print(ph.l_globalimgs[0].shape)
 #gra.plot_global_img(ph.labels_l_globalimgs, 0)
+#print(ph.labels_l_globalimgs[0].shape)
 #gra.plot_multiple_imgs(ph.labels_l_imgs, range(8))
 
 gra.display_all('form') #This is to plot all collected figures.

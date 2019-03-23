@@ -4,7 +4,8 @@ import numpy as np
 from keras.utils import plot_model
 import matplotlib.colors as mcolors
 import matplotlib as mpl
-
+import math
+from matplotlib import cm as cmap
 
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
@@ -144,12 +145,42 @@ class Plotter_Func2class(object):
             j+=1
         
 #............................
-    def plot_multiple_histograms(self, dim, l_dgms, idxL, figId=11): 
+    def plot_multiple_2d_histograms(self, ph, idxL, figId = 23): 
         figId = self.smart_append(figId)
-        fig = self.plt.figure(figId, facecolor='white', figsize=(8,8))
-        j=0; nrow, ncol=int(len(idxL)/2),2
-        fig.suptitle('Histograms: H%i' %dim, fontsize=12)
+        fig = self.plt.figure(figId, facecolor = 'white', figsize = (12,8))
+        fig.suptitle(r'2D Histograms of persistent homology in dim one ($H_{1}$)' '\n' 
+                r'$\Delta r=\dfrac{death - birth}{2}$' '\n' r'$\bar{r}=\dfrac{birth + death}{2}$', fontsize = 8)
+        j = 0; nrow, ncol = int(len(idxL)/2),2
+        dict_units = {'pv': '($K \ m^{2} \ kg^{-1} \ s^{-1}$)'} # Dict. of units for plotting. Extend it in the future...
+        l_dgms = ph.l_dgms # Get list of persistence diagrams (barcodes) from the object class. 
+        
+        print('[+] Dim 1 - 2d Histograms')
+        xbins = 28 # Number of bins.
+        xranges = 0.7 # Max range for 2d axis.
+        nbin = np.linspace(0,0.7,28) # Set no. of bins (2d cells), it sets up the size of image (e.g., from 0 to 0.5).
+        root_degree = 3.0 # Root degree.
+        scale_flag = True # If we want scale data using non-linear function to get better spread of points.
 
+        for i in idxL:
+            elem = l_dgms[i]
+            dgm = elem[1][:] # Get H1 diagrams from the list.
+            dR, mR = ph.compute_deltaR_midR(root_degree, dgm, scale_flag) # Calculate delta R and mid R. 
+            ax = self.plt.subplot(nrow, ncol, j+1, aspect='equal')
+            ax.hist2d(dR, mR, bins=nbin, cmin=0.99, cmap=cmap.rainbow)
+            self.plt.xlabel(r'$\Delta r$ %s' %dict_units[ph.varname], fontsize=7)
+            self.plt.ylabel(r'$\bar r$ %s' %dict_units[ph.varname], fontsize=7)
+            ax.set_title('ID: %i; Class: %i' %(j, 000)) # Set class and Id once data label generating is done.
+            j+=1
+
+#............................
+    def plot_multiple_1d_histograms(self, ph, idxL, figId = 23): 
+        figId = self.smart_append(figId)
+        fig = self.plt.figure(figId, facecolor = 'white', figsize = (12,8))
+        fig.suptitle('Histograms of homology in dim one (H%i) \n dR=(death - birth)/2 \n  dS=(birth+death)/2' %dim, fontsize = 8)
+        j = 0; nrow, ncol = int(len(idxL)/2),2
+        dict_units = {'pv': '($K \ m^{2} \ kg^{-1} \ s^{-1}$)'} # Dict. of units for plotting. Extend it in the future...
+        l_dgms = ph.l_dgms # Get list of persistence diagrams (barcodes) from the object class. 
+        
         if dim == 0:
             print('Dim 0 - 1d Histogram')
             for i in idxL:
@@ -163,37 +194,8 @@ class Plotter_Func2class(object):
                 self.plt.grid(axis='y', alpha=0.75)
                 self.plt.xlabel('Value')
                 self.plt.ylabel('Frequency')
-                #self.plt.title('Histogram of H%i' %dim)
                 maxfreq = n.max()
                 self.plt.ylim(top=np.ceil(maxfreq / 10) * 10 if maxfreq % 10 else maxfreq + 10) #Sets a clean upper y-axis limit.
-                ax.set_title('%i' %j)
-                j+=1
-        else:
-            print('Dim 1 - 2d Histogram')
-            for i in idxL:
-                elem = l_dgms[i]
-                dgm = elem[dim][:]
-                dR = np.array([np.around((x[1]-x[0])/2, decimals=8) for x in dgm])
-                mR = np.array([np.around((x[1]+x[0])/2, decimals=8) for x in dgm])
-                ax = self.plt.subplot(nrow, ncol, j+1)
-                #nbin = np.linspace(0,0.5,28) #Here we set number of bins (2d cells) so in fact it sets up the size of image (e.g., from 0 to 0.5).
-                nbin = np.linspace(0,0.1,30) #Here we set number of bins (2d cells) so in fact it sets up the size of image (e.g., from 0 to 0.5).
-                #ax.hist2d(dR, mR, bins=nbin, normed=True)
-                #ax.hist2d(dR, mR, norm=mpl.colors.LogNorm())
-                
-                x_bins = np.logspace(np.log10(dR.min()), np.log10(dR.max()), np.sqrt(dR.shape[0]))
-                y_bins = np.logspace(np.log10(mR.min()), np.log10(mR.max()), np.sqrt(mR.shape[0]))
-                ax.hist2d(dR, mR, bins=[x_bins, y_bins])
-                ax.set_xscale('log')
-                ax.set_yscale('log')                
-
-                #ax.hist2d(dR, mR, bins=nbin, norm=mcolors.PowerNorm([0.8]))
-                self.plt.xlabel('dR=(death - birth)/2')
-                self.plt.ylabel('dS=(birth + death)/2')
-                #self.plt.title('Histogram of H%i' %dim)
-                #self.plt.colorbar(ax=ax)
-                #self.plt.yscale('log', nonposy='clip')
-                #self.plt.xscale('log', nonposx='clip')
                 ax.set_title('%i' %j)
                 j+=1
 
