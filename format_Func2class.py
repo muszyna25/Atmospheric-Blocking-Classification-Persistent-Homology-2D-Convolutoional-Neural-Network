@@ -68,10 +68,14 @@ ph.generate_data_list()
 #outputListData=[np.random.random((100, 100)) for i in range(1888)] # List of fake 2d histograms (10x10). 
 #ph.save_dict_to_hdf5(ph.outputData)
 #ph.load_hdf5_file('train.hd5')
-#gra.plot_global_img(ph.l_globalimgs, 0)
-#gra.plot_multiple_imgs(ph.l_imgs, range(8))
+gra.plot_global_img(ph, 0)
+gra.plot_multiple_imgs(ph, range(8))
+
+''' Fixed plotting histograms
 gra.plot_multiple_1d_histograms(ph, range(8)) 
-#gra.plot_multiple_2d_histograms(ph, range(8)) 
+gra.plot_multiple_2d_histograms(ph, range(8)) 
+'''
+
 #gra.plot_multiple_barcodes(0, ph.l_dgms, range(8))
 #gra.plot_multiple_diagrams(1, ph.l_dgms, range(8))
 
