@@ -227,6 +227,12 @@ class Persist_Homologyclass(object):
             else:
                 y.extend([0])
         return y
+
+#............................
+    def assign_label_v2(self, l_imgs):
+        
+        return 0
+
 #............................
     def generate_labeled_data_list(self): 
         #print('generate_labeled_data_list')
@@ -236,23 +242,27 @@ class Persist_Homologyclass(object):
             for j in range(1457, len(fd)):
                 print('Timestep: %d' % j)
                 img = fd[j]
+                img = np.flip(img,0) # ETHZ guys saved the matrix fliped so it must be fliped by axis 0. 
+
                 self.labels_l_globalimgs.append(img) # Store global binary images.
+
                 l_subimages = self.extract_subimages(img, 4) # Extracts eight subimages.
+                
                 self.labels_l_imgs.extend(l_subimages)
+
                 l_y = self.assign_label(l_subimages, 0.01) # Start with 10% of pixels as ones (1's).
+                
                 self.Y_labels.extend(l_y)
 
 #............................
     def compute_deltaR_midR(self, root_degree, dgm, scale_flag):
         if scale_flag:
-            dR = np.array([math.pow(np.around((x[1]-x[0])/2.0, decimals=8),1.0/root_degree) for x in dgm]) # ()
+            dR = np.array([math.pow(np.around((x[1]-x[0])/2.0, decimals=8),1.0/root_degree) for x in dgm])  
             mR = np.array([math.pow(np.around((x[1]+x[0])/2.0, decimals=8),1.0/root_degree) for x in dgm])
         else:
-            dR = np.array([np.around((x[1]-x[0])/2, decimals=8) for x in dgm])
-            mR = np.array([np.around((x[1]+x[0])/2, decimals=8) for x in dgm])
+            dR = np.array([np.around((x[1]-x[0])/2.0, decimals=8) for x in dgm])
+            mR = np.array([np.around((x[1]+x[0])/2.0, decimals=8) for x in dgm])
 
         return (dR, mR)
-
-
 
 

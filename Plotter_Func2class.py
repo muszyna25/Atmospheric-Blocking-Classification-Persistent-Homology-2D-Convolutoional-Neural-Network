@@ -6,6 +6,7 @@ import matplotlib.colors as mcolors
 import matplotlib as mpl
 import math
 from matplotlib import cm as cmap
+import sys
 
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
@@ -31,7 +32,7 @@ class Plotter_Func2class(object):
         self.figL=[]
         self.outPath=args.outPath
         self.nr_nc=(3,3)
-        self.dict_units = {'pv': '($K \ m^{2} \ kg^{-1} \ s^{-1}$)'} # Dict. of units for plotting. Extend it in the future...
+        self.dict_units = {'pv': '($K \ m^{2} \ kg^{-1} \ s^{-1}$)', 'u':'($m \ s^{-2}$)', 'v': '($m \ s^{-2}$)', 't': '($K$)'} # Dict. of units for plotting. Extend it in the future...
 
     #............................
     def display_all(self,pdf=1):
@@ -204,7 +205,7 @@ class Plotter_Func2class(object):
         fig.suptitle('Extracted subimages' + '\n' + 'Variable name: %s, unit: %s' %(ph.varname, self.dict_units[ph.varname]), fontsize=7)
         for i in idxL: 
             ax = self.plt.subplot(nrow, ncol, j+1)
-            ax.imshow(ph.l_imgs[i], interpolation='bilinear') #Plots multiple subimages next to each other.
+            ax.imshow(ph.l_imgs[i], interpolation='lanczos') #Plots multiple subimages next to each other.
             ax.set_title('ID: %i; Class: %i' %(j, 000)) # Set class and Id once data label generating is done.
             j+=1
 
@@ -214,8 +215,29 @@ class Plotter_Func2class(object):
         fig = self.plt.figure(figId, facecolor='white', figsize=(8,8))
         fig.suptitle('Global image', fontsize=12)
         ax0 = self.plt.subplot(1, 1, 1)
-        ax0.imshow(ph.l_globalimgs[indx], interpolation='bilinear') #It does blinear interpolation of data to display image.
+        ax0.imshow(ph.l_globalimgs[indx], interpolation='lanczos') #It does blinear interpolation of data to display image.
         ax0.set_title('Variable name: %s, unit: %s' %(ph.varname, self.dict_units[ph.varname]))
+
+#............................
+    def plot_multiple_binary_masks(self, ph, idxL, figId=25):
+        figId = self.smart_append(figId)
+        fig = self.plt.figure(figId, facecolor='white', figsize=(8,8))
+        n = len(ph.labels_l_imgs); #no_imgs = int(np.round(n/2));
+        j = 0; nrow,ncol=int(len(idxL)/2),2
+        fig.suptitle('Extracted submasks', fontsize=7)
+        for i in idxL: 
+            ax = self.plt.subplot(nrow, ncol, j+1)
+            ax.imshow(ph.labels_l_imgs[i], interpolation='lanczos') #Plots multiple subimages next to each other.
+            ax.set_title('ID: %i; Class: %i' %(i, 000)) # Set class and Id once data label generating is done.
+            j+=1
+
+#............................
+    def plot_global_binary_mask(self, ph, indx, figId=26):
+        figId = self.smart_append(figId)
+        fig = self.plt.figure(figId, facecolor='white', figsize=(8,8))
+        fig.suptitle('Global image', fontsize=12)
+        ax0 = self.plt.subplot(1, 1, 1)
+        ax0.imshow(ph.labels_l_globalimgs[indx], interpolation='lanczos') #It does blinear interpolation of data to display img.
 
 #####........My code....................    
 

@@ -50,15 +50,18 @@ gra=Plotter_Func2class(args)
 
 #............................
 ecmwf_data_path='/global/cscratch1/sd/muszyng/ethz_data/ecmwf_data/' # Name of one file that I have: ECMWF_1979_Jan.nc
-varname='pv'
+varname='t'
 ecmwf_labeled_data_path='/global/cscratch1/sd/muszyng/ethz_data/labels/'
+
+#............................
+ph=Persist_Homologyclass(ecmwf_data_path, ecmwf_labeled_data_path, varname) # You can specify max homology dimension and metric for distance matrix.
 
 '''These two are for testing'''
 #out=ph.read_netcdf_file_('/global/cscratch1/sd/muszyng/ethz_data/ecmwf_download/batch_scripts/', 'ERA_INTERIM_1979.nc', 'pv') #Variables names: e.g., 'lon', 'lat', 'prw'
 #outputListData=[np.random.random((100, 100)) for i in range(1888)] # List of fake 2d histograms (10x10). 
 
 #............................
-ph=Persist_Homologyclass(ecmwf_data_path, ecmwf_labeled_data_path, varname) # You can specify max homology dimension and metric for distance matrix.
+#print(out.shape)
 
 ph.generate_list_of_files()
 ph.generate_data_list()
@@ -69,10 +72,15 @@ ph.generate_labeled_data_list()
 #ph.save_dict_to_hdf5(ph.outputData)
 #ph.load_hdf5_file('train.hd5')
 
-''' Fixed plotting global image and subimages
+''' Fixed plotting global binary mask and submasks'''
+gra.plot_global_binary_mask(ph, 0)
+gra.plot_multiple_binary_masks(ph, range(8))
+#'''
+
+''' Fixed plotting global image and subimages'''
 gra.plot_global_img(ph, 0)
 gra.plot_multiple_imgs(ph, range(8))
-'''
+#'''
 
 ''' Fixed plotting histograms
 gra.plot_multiple_1d_histograms(ph, range(8)) 
