@@ -195,7 +195,7 @@ class Persist_Homologyclass(object):
         for i in range(1, len(self.fn_list)):
             fd=self.read_netcdf_file(self.datapath, self.fn_list[i], self.varname)
             print('File:', self.fn_list[i])
-            for j in range(109, len(fd)):
+            for j in range(110, len(fd)): #109
                 print('Timestep: %d' % j)
                 img = fd[j] #Gets an image from a file.
                 self.l_globalimgs.append(img)
@@ -214,7 +214,7 @@ class Persist_Homologyclass(object):
                     self.list_new_data.append(new_repres_img)
 
 #............................
-    def assign_label(self, l_imgs, threshold):
+    def assign_label(self, l_imgs, threshold): #This function does not work well
         y = []
         th = threshold * int(l_imgs[0].shape[0]*l_imgs[0].shape[1])
         #print('Threshold: %i' %th)
@@ -229,9 +229,30 @@ class Persist_Homologyclass(object):
         return y
 
 #............................
-    def assign_label_v2(self, l_imgs):
-        
-        return 0
+    def assign_label_v2(self, l_imgs, threshold):
+        y = []
+        n_imgs = len(l_imgs)
+        x_size = l_imgs[0].shape[0]
+        y_size = l_imgs[0].shape[1]
+        mid_pt = [np.round(x_size/2.0), np.round(y_size/2.0)]
+
+        th = 0.5
+        x_start = int(mid_pt[0] - np.round(th*x_size))
+        x_end = int(mid_pt[0] + np.round(th*x_size))
+        y_start = int(mid_pt[1] - np.round(th*y_size))
+        y_end = int(mid_pt[1] + np.round(th*y_size))
+
+        for j in range(0, n_imgs):
+            no_ones = list(l_imgs[j].flatten()).count(1)
+            if no_ones == 0: continue
+            sub_img = l_imgs[j][x_start:x_end][y_start:y_end] # Extract subimage.
+            n_ones = list(sub_img.flatten()).count(1)
+            t = threshold * sub_img.shape[0] * sub_img.shape[1]
+            if n_ones >= t:
+                y.extend([1])
+            else:
+                y.extend([0])
+        return y
 
 #............................
     def generate_labeled_data_list(self): 
@@ -239,7 +260,7 @@ class Persist_Homologyclass(object):
         for i in range(0, len(self.labels_fn_list)):
             fd=self.read_netcdf_file(self.labeled_data_path, self.labels_fn_list[i], 'FLAG') # Variable name is fixed for these files.
             print('File:', self.labels_fn_list[i])
-            for j in range(1457, len(fd)):
+            for j in range(0, len(fd)): #1457
                 print('Timestep: %d' % j)
                 img = fd[j]
                 img = np.flip(img,0) # ETHZ guys saved the matrix fliped so it must be fliped by axis 0. 
@@ -250,7 +271,9 @@ class Persist_Homologyclass(object):
                 
                 self.labels_l_imgs.extend(l_subimages)
 
-                l_y = self.assign_label(l_subimages, 0.01) # Start with 10% of pixels as ones (1's).
+                #l_y = self.assign_label(l_subimages, 0.01) # Start with 10% of pixels as ones (1's).
+
+                l_y = self.assign_label_v2(l_subimages, 0.01)
                 
                 self.Y_labels.extend(l_y)
 

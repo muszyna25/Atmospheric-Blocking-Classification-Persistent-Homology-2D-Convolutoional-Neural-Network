@@ -66,6 +66,7 @@ ph=Persist_Homologyclass(ecmwf_data_path, ecmwf_labeled_data_path, varname) # Yo
 ph.generate_list_of_files()
 ph.generate_data_list()
 ph.generate_labeled_data_list()
+print(len(ph.Y_labels))
 
 #............................
 '''These two need to be fixed'''
@@ -73,13 +74,13 @@ ph.generate_labeled_data_list()
 #ph.load_hdf5_file('train.hd5')
 
 ''' Fixed plotting global binary mask and submasks'''
-gra.plot_global_binary_mask(ph, 0)
-gra.plot_multiple_binary_masks(ph, range(8))
+gra.plot_global_binary_mask(ph, 3)
+gra.plot_multiple_binary_masks(ph, range(24,32))
 #'''
 
 ''' Fixed plotting global image and subimages'''
-gra.plot_global_img(ph, 0)
-gra.plot_multiple_imgs(ph, range(8))
+#gra.plot_global_img(ph, 0)
+#gra.plot_multiple_imgs(ph, range(8))
 #'''
 
 ''' Fixed plotting histograms
