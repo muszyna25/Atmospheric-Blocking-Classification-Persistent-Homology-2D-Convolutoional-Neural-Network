@@ -97,6 +97,7 @@ class Plotter_Func2class(object):
                 data = elem[dim][:]
 
             no = len(data) #Gets number of points (lines/bars).
+            print('data diagram', len(data), data)
 
             #Plot persistence diagrams.
             ax = self.plt.subplot(nrow, ncol, j+1)

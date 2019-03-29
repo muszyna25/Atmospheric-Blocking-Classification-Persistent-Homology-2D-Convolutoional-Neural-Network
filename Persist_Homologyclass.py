@@ -3,61 +3,71 @@ from netCDF4 import Dataset
 import numpy as np
 from sklearn import preprocessing
 from ripser import ripser
-from scipy.spatial.distance import pdist, squareform
+from scipy.spatial.distance import pdist, cdist, squareform
 import h5py
 import math
+from functools import reduce
+from scipy.spatial import distance
+
 
 class Persist_Homologyclass(object):
-    def __init__(self, datapath, labeled_data_path, varname, norm='cosine', maxdim=1):
-        self.datapath=datapath
+    def __init__(self, data_path, bin_mask_path, varname='t', norm='euclidean', maxdim=1):
+        self.data_path=data_path
+        self.bin_mask_path=bin_mask_path
         self.varname=varname
-        self.labeled_data_path=labeled_data_path
+
+        # Params for peristent homology.
         self.norm = norm
         self.maxdim = maxdim
-        self.fn_list = []
-        self.list_new_data = []
-        self.outputData={dom:{'X': np.ndarray([]),'Y':np.array([])} for dom in ['train','val','test']}
-        self.dgms = np.ndarray([])
+
+        # Lists for data.
+        self.l_fns = []
+        self.l_2D_hist = []
         self.l_imgs = []
         self.l_dgms = []
-        self.l_globalimgs = []
-        self.labels_l_imgs = []
-        self.labels_fn_list = []         
-        self.labels_l_globalimgs = []
-        self.Y_labels = []
+        self.l_global_imgs = []
+
+        # Lists for binary masks.
+        self.l_lab_imgs = []
+        self.l_lab_fns = []         
+        self.l_lab_global_imgs = []
+        self.l_labels = []
         
+        self.outputData={dom:{'X': np.ndarray([]),'Y':np.array([])} for dom in ['train','val','test']} # Output for hdf5 format.
+
 #............................
-    def create_file_list(self, st_offset, debug):
+    def generate_dataset(self):
+        self.generate_list_of_files()
+        self.generate_data_list()
+        self.generate_labeled_data_list()
+
+#............................
+    def save_dataset_hdf5(self):
+        self.save_dict_to_hdf5(self.l_2D_hist)
+
+#............................
+    def create_file_list(self):
         list_of_files = []
         for root, dirs, files in os.walk('.'):  # Walks through all files in the given directory.
-            for filename in files:
-                if filename.endswith(".nc"): # If a netCDF file.
-                    list_of_files.append(filename)
-                    # file_list = sorted(list_of_files, key = lambda x: x.split('.')[0][st_offset:]) 
-                    # Sort file list by extracted 'year' from the file name. 
-                    # E.g., arg 'st_offset' must be adjusted to the file name format of specific datasets.
-        if(debug):
-            file_list = sorted(list_of_files, key = lambda x: x.split('_')[1]) # For ERA-Interim data.
-        else: file_list = list_of_files
+            list_of_files = [filename for filename in files if filename.endswith(".nc")]
+        file_list = sorted(list_of_files, key = lambda x: x.split('_')[1]) # Sort files for data format: 'name_year.nc'.
         return file_list
 
 #............................
     def generate_list_of_files(self):
-        debug_raw = True
+        # Climate netcdf data files.
         cwd = os.getcwd() 
-        os.chdir(self.datapath)
-        # Creates file list and sorts it based on the extracted information from file name. 
-        # E.g., arg 'st_offset = 6' must be adjusted to the file name format of specific datasets.
-        self.fn_list = self.create_file_list(6, debug_raw)         
-        print(self.fn_list)
-
-        debug_label = False
+        os.chdir(self.data_path)
+        self.l_fns = self.create_file_list()         
+        print(self.l_fns)
+        print('[+] generate_list_of_files -- climate data -- done')
+        
+        # Binary mask netcdf files.
         cwd = os.getcwd() 
-        os.chdir(self.labeled_data_path)
-        # Creates file list and sorts it based on the extracted information from file name. 
-        # E.g., arg 'st_offset = 6' must be adjusted to the file name format of specific datasets.
-        self.labels_fn_list = self.create_file_list(6, debug_label)         
-        print(self.labels_fn_list)
+        os.chdir(self.bin_mask_path)
+        self.l_lab_fns = self.create_file_list()         
+        print(self.l_lab_fns)
+        print('[+] generate_list_of_files -- binary masks -- done')
   
 #............................
     def read_netcdf_file(self, path, fname, varname): #Variables names: e.g., 'lon', 'lat', 'prw'
@@ -76,12 +86,12 @@ class Persist_Homologyclass(object):
 #............................
     def preprocessing_norm_stand(self, img): #This function does normalization and standardization of the input data.
         img = preprocessing.normalize(img)
-        scaler = preprocessing.StandardScaler()
+        #scaler = preprocessing.StandardScaler()
+        scaler = preprocessing.MinMaxScaler(feature_range=(0,1))
         img = scaler.fit_transform(img)
         
-        #X = img - np.mean(img, axis=0)
+        #X = img - np.mean(img,axis=0)
         #img = X/np.std(img, axis=0)
-        
         return img
 
 #............................
@@ -122,28 +132,59 @@ class Persist_Homologyclass(object):
     
 #............................
     def compute_dist_mat(self, M, norm): #e.g., norm: 'euclidean', etc.
-        #print('Original ', M.shape)
-        D = pdist(M, norm) #Computes all the pairwise distances.
-        SD = squareform(D) #Forms a matrix from the vector with pairwise distances.
-        n = SD.shape
-        #print('Number of points: ', n)
+
+        print('Original ', type(M), M.shape)
+
+        # Row pairwise distance.
+        #D = pdist(M, norm) #Computes all the pairwise distances.
+        #SD = squareform(D) #Forms a matrix from the vector with pairwise distances.
+
+        R = M.reshape((M.shape[0]*M.shape[1], 1))
+        print('Reshaping')
+        #SD = cdist(R, R, norm)
+        #SD = np.tril(SD)
+        # or
+        PD = pdist(R, norm)
+        print('pdist', PD.shape)
+        SD = squareform(PD)
+        
+        #print(M[0][:])
+        #lM = M.tolist()
+        #llM=reduce(lambda x,y: x+y,lM)
+        #print('List ', type(llM), len(llM))
+        
+        #print(llM)
+        #M = np.array(M)
+        #print('Original ', type(M), M.shape)
+        #SD = cdist(np.asmatrix(M), np.asmatrix(M), norm)
+        #SD = cdist(llM, llM, norm)
+        
+        #SD = np.array([])
+        #for i in range(0, len(llM)):
+        #    for j in range(0, len(llM)):
+        #        SD=np.append(SD, llM[i]-llM[j])
+
+        #SD = [np.abs(i[j]-i[j]) for j in range(0,len(i)) for i in lM]
+
+        print('SD', type(SD), SD.shape)
+
         return SD
 
 #............................
     def PH_func_call(self, data, norm, maxdim):
         X = self.compute_dist_mat(data, norm) #Computes distance matrix from a squared scalar field.
-        result = ripser(X, distance_matrix=True, maxdim=maxdim) #Calls Ripser to compute persistent homology (it is C++ code with Python binding).
+        #result = ripser(data, distance_matrix=True, maxdim=maxdim, metric='euclidean') #Ripser to compute persistent homology (it is C++ code with Python binding).
+        result = ripser(X, distance_matrix=True, maxdim=maxdim, thresh=1.0) # Set threshold to speed up computations. 
         dgms = result['dgms']
         return dgms
 
 #............................
     def hist_data(self, dgms): #Computes 2d histogram for dR = birth - death and mR = birth + death
-        data = dgms[1]
-        dR = np.array([np.around((x[1]-x[0])/2, decimals=8) for x in data]) #Should I take the mean?
-        mR = np.array([np.around((x[1]+x[0])/2, decimals=8) for x in data])
+        data = dgms[1][:]
+        dR = np.array([np.around((x[1]-x[0])/2.0, decimals=8) for x in data]) #Should I take the mean?
+        mR = np.array([np.around((x[1]+x[0])/2.0, decimals=8) for x in data])
         nbin = np.linspace(0,0.5,28) #Here we set number of bins (2d cells) so in fact it sets up the size of image (e.g., from 0 to 0.5).
         counts, xedges, yedges = np.histogram2d(dR, mR, bins=nbin)
-        #print(counts.shape, xedges.shape, yedges.shape)
         return counts
 
 #............................
@@ -180,6 +221,7 @@ class Persist_Homologyclass(object):
             for xy in self.outputData[ktvt]:
                 hf.create_dataset(xy, data=self.outputData[ktvt][xy]) #ktvt is the first key, xy is the key as dictionary.
             hf.close()
+        print('[+] save_dict_to_hdf5 -- done')
 
 #............................
     def load_hdf5_file(self, inputFile): # Load data to check if it was saved properly.
@@ -190,28 +232,28 @@ class Persist_Homologyclass(object):
         h5f.close()
 
 #............................
+    def k_subimages_PH(self, I): 
+        dgms = np.ndarray([])
+        dgms = self.PH_func_call(I, self.norm, self.maxdim) #Computes H1 homologies.
+        self.l_dgms.append(dgms)
+        new_repres_img = self.hist_data(dgms) #Computes 2d histogram.
+        return new_repres_img
+
+#............................
     def generate_data_list(self):
-        print('generate_data_list')
-        for i in range(1, len(self.fn_list)):
-            fd=self.read_netcdf_file(self.datapath, self.fn_list[i], self.varname)
-            print('File:', self.fn_list[i])
-            for j in range(110, len(fd)): #109
+        for i in range(1, len(self.l_fns)): ## change to 0.
+            print('File:', self.l_fns[i])
+            fd=self.read_netcdf_file(self.data_path, self.l_fns[i], self.varname)
+            for j in range(110, len(fd)): 
                 print('Timestep: %d' % j)
-                img = fd[j] #Gets an image from a file.
-                self.l_globalimgs.append(img)
-                #img = self.preprocessing_norm_stand(img) #Normalizes & standardizes data..
-                imgs = self.extract_subimages(img, 4)
-                self.l_imgs.extend(imgs) #Extracts eight subimages.
-                for k in range(0, len(self.l_imgs)):
-                    #if k % 2 == 0: #I = add_rnd_noise(l_imgs[k]) #Adds randomness to create second class of objects in the input raw data.
-                    I = self.l_imgs[k]
-                    I = self.preprocessing_norm_stand(I) #Normalizes & standardizes data.
-                    self.dgms = self.PH_func_call(I, self.norm, self.maxdim) #Computes H1 homologies.
-                    self.l_dgms.append(self.dgms)
-                    new_repres_img = self.hist_data(self.dgms) #Computes 2d histogram.
-                    if k%2 == 0:
-                        np.random.shuffle(new_repres_img) #Adds randomness to every second 2d histogram.
-                    self.list_new_data.append(new_repres_img)
+                self.l_global_imgs.append(fd[j])
+                print('Global img size ', fd.shape)
+                img = self.preprocessing_norm_stand(fd[j]) # Normalizes & standardizes data to get rid of noise.
+                print('max img', np.max(img))
+                imgs = self.extract_subimages(img, 4) # Extracts n images per hemisphere (here, 4*2 = 8 images in total).
+                self.l_imgs.extend(imgs) # Extracts eight subimages.
+                self.l_2D_hist.extend([self.k_subimages_PH(self.preprocessing_norm_stand(imgs[k])) for k in range(0, len(imgs))]) # Creates list of 2d histograms.
+        print('[+] %i 2D hists: generate_data_list -- done' %len(self.l_2D_hist))
 
 #............................
     def assign_label(self, l_imgs, threshold): #This function does not work well
@@ -257,25 +299,26 @@ class Persist_Homologyclass(object):
 #............................
     def generate_labeled_data_list(self): 
         #print('generate_labeled_data_list')
-        for i in range(0, len(self.labels_fn_list)):
-            fd=self.read_netcdf_file(self.labeled_data_path, self.labels_fn_list[i], 'FLAG') # Variable name is fixed for these files.
-            print('File:', self.labels_fn_list[i])
-            for j in range(0, len(fd)): #1457
+        for i in range(1, len(self.l_lab_fns)): ## change to 0
+            fd=self.read_netcdf_file(self.bin_mask_path, self.l_lab_fns[i], 'FLAG') # Variable name is fixed for these files.
+            print('File:', self.l_lab_fns[i])
+            for j in range(1458, len(fd)): #1457
                 print('Timestep: %d' % j)
                 img = fd[j]
                 img = np.flip(img,0) # ETHZ guys saved the matrix fliped so it must be fliped by axis 0. 
 
-                self.labels_l_globalimgs.append(img) # Store global binary images.
+                self.l_lab_global_imgs.append(img) # Store global binary images.
 
                 l_subimages = self.extract_subimages(img, 4) # Extracts eight subimages.
                 
-                self.labels_l_imgs.extend(l_subimages)
+                self.l_lab_imgs.extend(l_subimages)
 
                 #l_y = self.assign_label(l_subimages, 0.01) # Start with 10% of pixels as ones (1's).
 
                 l_y = self.assign_label_v2(l_subimages, 0.01)
                 
-                self.Y_labels.extend(l_y)
+                self.l_labels.extend(l_y)
+        print('[+] generate_labeled_data_list -- done')
 
 #............................
     def compute_deltaR_midR(self, root_degree, dgm, scale_flag):

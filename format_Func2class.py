@@ -49,33 +49,21 @@ args=get_parser()
 gra=Plotter_Func2class(args)
 
 #............................
-ecmwf_data_path='/global/cscratch1/sd/muszyng/ethz_data/ecmwf_data/' # Name of one file that I have: ECMWF_1979_Jan.nc
-varname='t'
-ecmwf_labeled_data_path='/global/cscratch1/sd/muszyng/ethz_data/labels/'
+data_path='/global/cscratch1/sd/muszyng/ethz_data/ecmwf_data/' # Path to netCDF files directory.
+bin_mask_path='/global/cscratch1/sd/muszyng/ethz_data/labels/' # Path to binary mask files directory.
 
 #............................
-ph=Persist_Homologyclass(ecmwf_data_path, ecmwf_labeled_data_path, varname) # You can specify max homology dimension and metric for distance matrix.
+ph=Persist_Homologyclass(data_path, bin_mask_path) # Optional: 1) var name; 2) metric pairwise dist matrix; 3) max homology group dim.
 
-'''These two are for testing'''
-#out=ph.read_netcdf_file_('/global/cscratch1/sd/muszyng/ethz_data/ecmwf_download/batch_scripts/', 'ERA_INTERIM_1979.nc', 'pv') #Variables names: e.g., 'lon', 'lat', 'prw'
-#outputListData=[np.random.random((100, 100)) for i in range(1888)] # List of fake 2d histograms (10x10). 
-
-#............................
-#print(out.shape)
-
-ph.generate_list_of_files()
-ph.generate_data_list()
-ph.generate_labeled_data_list()
-print(len(ph.Y_labels))
+ph.generate_dataset() # Generate dataset: (X - features, Y - labels).
+#ph.save_dataset_hdf5() # Save dataset to hdf5 format: (train, val, test).
 
 #............................
-'''These two need to be fixed'''
-#ph.save_dict_to_hdf5(ph.outputData)
 #ph.load_hdf5_file('train.hd5')
 
 ''' Fixed plotting global binary mask and submasks'''
-gra.plot_global_binary_mask(ph, 3)
-gra.plot_multiple_binary_masks(ph, range(24,32))
+#gra.plot_global_binary_mask(ph, 3)
+#gra.plot_multiple_binary_masks(ph, range(24,32))
 #'''
 
 ''' Fixed plotting global image and subimages'''
@@ -88,13 +76,12 @@ gra.plot_multiple_1d_histograms(ph, range(8))
 gra.plot_multiple_2d_histograms(ph, range(8)) 
 '''
 
-''' Fixed plotting barcodes and diagrams
-gra.plot_multiple_barcodes(0, ph, range(8))
-gra.plot_multiple_barcodes(1, ph, range(8))
-gra.plot_multiple_diagrams(1, ph, range(8))
-'''
+''' Fixed plotting barcodes and diagrams'''
+#gra.plot_multiple_barcodes(0, ph, range(8))
+#gra.plot_multiple_barcodes(1, ph, range(8))
+#gra.plot_multiple_diagrams(1, ph, range(8))
 
-gra.display_all('form') #This is to plot all collected figures.
+#gra.display_all('form') #This is to plot all collected figures.
 
 #............................
 
@@ -108,7 +95,9 @@ gra.display_all('form') #This is to plot all collected figures.
 
 
 
-
+'''These two are for testing'''
+#out=ph.read_netcdf_file_('/global/cscratch1/sd/muszyng/ethz_data/ecmwf_download/batch_scripts/', 'ERA_INTERIM_1979.nc', 'pv') #Variables names: e.g., 'lon', 'lat', 'prw'
+#outputListData=[np.random.random((100, 100)) for i in range(1888)] # List of fake 2d histograms (10x10). 
 
 '''
 deep=Deep_Func2class(**vars(args))
