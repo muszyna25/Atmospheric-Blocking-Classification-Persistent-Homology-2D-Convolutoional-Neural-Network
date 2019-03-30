@@ -16,13 +16,13 @@ for year in range(1979, 1980):
                 'stream'    : "oper",
                 'type'      : "an",
                 'levtype'   : "pl",
-                'levelist'  : "150/200/250/300/350/400/450/500",
-                'grid'      : "0.75/0.75",
+                'levelist'  : "150",
+                'grid'      : "0.9983/0.9983",
                 'format'    : "netcdf",
-                'param'     : "60.128/129.128/130.128/131.128/132.128",
-                'time'      : "00:00:00/06:00:00/12:00:00/18:00:00",
+                'param'     : "60.128",
+                'time'      : "00:00:00",
                 'target'    : fn_netcdf,
-                'date'      : "{0:04d}-01-01/to/{0:04d}-12-31".format(year),
+                'date'      : "{0:04d}-01-01/to/{0:04d}-01-02".format(year),
             })
             print("Everything works for {0}".format(fn_netcdf))
 
