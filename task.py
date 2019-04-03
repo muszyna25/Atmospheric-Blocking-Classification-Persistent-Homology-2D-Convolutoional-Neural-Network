@@ -10,7 +10,7 @@ import h5py
 import math
 from scipy.spatial import distance
 import sys
-from hostlist import expand_hostlist
+import time
 
 class PH_class(object):
     def __init__(self, data_path='', bin_mask_path='', varname='t', norm='euclidean', maxdim=1):
@@ -88,17 +88,21 @@ class PH_class(object):
         print('Original ', type(M), M.shape)
         # Row pairwise distance.
         R = M.reshape((M.shape[0]*M.shape[1], 1))
-        print('Reshaping')
+        print('Reshaping', R.shape)
         PD = pdist(R, norm)
         print('pdist', PD.shape)
         SD = squareform(PD)
+        SD = np.tril(SD)
         print('SD', type(SD), SD.shape)
         return SD
 
 #............................
     def PH_func_call(self, data, norm, maxdim):
         X = self.compute_dist_mat(data, norm) #Computes distance matrix from a squared scalar field.
+        start = time.time()
         result = ripser(X, distance_matrix=True, maxdim=maxdim, thresh=1.0) # Set threshold to speed up computations. 
+        end = time.time()
+        print('ripser time %i' %(end-start))
         dgms = result['dgms']
         return dgms
 
@@ -150,45 +154,66 @@ class PH_class(object):
         print('[+] save_dict_to_hdf5 -- done')
 
 #............................
+    def save_dict_to_hdf5_(self, dataList, input_file, file_part, frame_id):
+        sizeTrain=0.7
+        sizeVal=0.2
+        sizeTest=0.1
+        nImgs=len(dataList)
+        nTrain=round(nImgs*sizeTrain)
+        nVal=round(nImgs*sizeVal)
+        nTest=round(nImgs*sizeTest)
+        #hf=h5py.File(input_file + '_' + file_part + '_' + frame_id + '.hd5', 'w')
+        #hf.create_dataset(xy, data=self.outputData[ktvt][xy]) #ktvt is the first key, xy is the key as dictionary.
+        #hf.close()
+        #print('[+] save_dict_to_hdf5 -- done')
+
+#............................
     def k_subimages_PH(self, I): 
         dgms = np.ndarray([])
         dgms = self.PH_func_call(I, self.norm, self.maxdim) #Computes H1 homologies.
         self.l_dgms.append(dgms)
         new_repres_img = self.hist_data(dgms) #Computes 2d histogram.
+        print('histogram size: ', len(new_repres_img))
         return new_repres_img
 
 #............................
-    def generate_data_list(self, idx):
+    def generate_data_list(self, idx, sub_img_id):
         print('File:', self.l_fns[0])
         fd=self.read_netcdf_file(self.l_fns[0], self.varname)
         print('Timestep: %d' % idx)
         self.l_global_imgs.append(fd[idx])
         print('Global img size ', fd.shape)
-        img = self.preprocessing_norm_stand(fd[idx]) # Normalizes & standardizes data to get rid of noise.
+        print('fd[idx] ', fd[idx][0].shape)
+        img = self.preprocessing_norm_stand(fd[idx][0]) # 0 corresponds to the first pressure level.
         print('max img', np.max(img))
-        imgs = self.extract_subimages(img, 4) # Extracts n images per hemisphere (here, 4*2 = 8 images in total).
+        Imgs = self.extract_subimages(img, 4) # Extracts n images per hemisphere (here, 4*2 = 8 images in total).
+
+        imgs = Imgs[sub_img_id]
+
         self.l_imgs.extend(imgs) # Extracts eight subimages.
-        self.l_2D_hist.extend([self.k_subimages_PH(self.preprocessing_norm_stand(imgs[k])) for k in range(0, len(imgs))]) # Creates list of 2d hist.
+        self.l_2D_hist.extend(self.k_subimages_PH(imgs)) # Creates list of 2d hist.
         print('[+] %i 2D hists: generate_data_list -- done' %len(self.l_2D_hist))
 
 #............................
-    def save_dataset_hdf5(self):
-        self.save_dict_to_hdf5(self.l_2D_hist)
+    def save_dataset_hdf5(self, input_file, file_part, frame_id):
+        self.save_dict_to_hdf5_(self.l_2D_hist, input_file, file_part, frame_id)
 
 if __name__ == "__main__":
 
     input_file = sys.argv[1]
-    file_part = sys.argv[2]
-    task_index  = int(os.environ['SLURM_PROCID'])
+    file_part = int(sys.argv[2])
+    sub_img_id = int(sys.argv[3])
+    proc_id = 0 #int(os.environ['SLURM_PROCID'])
+    frame_id = int(proc_id + file_part*62)
 
-    print(data_path, file_part, task_index)
+    print(file_part, frame_id, sub_img_id)
 
     ph = PH_class() # Optionals: 1) var name; 2) metric pairwise dist matrix; 3) max homology group dim.
 
     # Generate dataset: (X - features, Y - labels).
     ph.l_fns.append(input_file)
-    ph.generate_data_list(task_index)
+    ph.generate_data_list(frame_id, sub_img_id)
+    print('Task complete %i' %proc_id)
 
-    ph.save_dataset_hdf5() # Save dataset to hdf5 format: (train, val, test).
-
+    #ph.save_dataset_hdf5_(input_file, file_part, frame_id) # Save dataset to hdf5 format: (train, val, test).
 
