@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
     print('[+] ==== %s File name: %s File index: %i No processes/frames: %i' %(sys.argv[0], fname, f_idx, n_proc))
 
-    data = read_netcdf_file(fname, 't') # For now fix the variable.
+    data = read_netcdf_file(fname, 'pv') # For now fix the variable.
 
     f_data = [data[int(i + f_idx*32)][0] for i in range(0, n_proc) if int(i + f_idx*32) <= 1459] # Last slice of frames has 20 frames.
 

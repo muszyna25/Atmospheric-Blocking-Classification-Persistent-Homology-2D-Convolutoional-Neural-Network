@@ -21,7 +21,7 @@ echo "[+] ------Python module loaded: "
 python -V
 
 ### Workspace on CSCRATCH ###
-WKDIR="/global/cscratch1/sd/muszyng/homol_out/$SLURM_ARRAY_TASK_ID"
+WKDIR="/global/cscratch1/sd/muszyng/homol_out/$SLURM_JOB_ID/$SLURM_ARRAY_TASK_ID"
 
 mkdir -p ${WKDIR}
 
@@ -45,7 +45,7 @@ N_PROC=32
 
 python file_slicing.py ${INPUT_FILE} ${FILE_IDX} ${N_PROC} 
 
-FILE_NAME=$(ls *.npy)
+FILE_NAME=$(ls *.npz)
 
 ########## Parallel code ############
 

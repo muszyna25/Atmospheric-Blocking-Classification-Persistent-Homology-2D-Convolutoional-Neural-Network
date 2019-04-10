@@ -6,6 +6,7 @@ import numpy as np
 from sklearn import preprocessing
 from ripser import ripser
 from scipy.spatial.distance import pdist, cdist, squareform
+from scipy.spatial import distance_matrix
 import h5py
 import math
 from scipy.spatial import distance
@@ -13,7 +14,7 @@ import sys
 import time
 
 class PH_class(object):
-    def __init__(self, data_path='', bin_mask_path='', varname='t', norm='euclidean', maxdim=1):
+    def __init__(self, data_path='', bin_mask_path='', varname='t', norm='cosine', maxdim=1):
         self.data_path=data_path
         self.bin_mask_path=bin_mask_path
         self.varname=varname
@@ -86,26 +87,56 @@ class PH_class(object):
         return lsubimgs
     
 #............................
+    def pw_dist(self, M):
+        R = M.reshape((M.shape[0]*M.shape[1], 1))
+        return R
+#............................
     def compute_dist_mat(self, M, norm): #e.g., norm: 'euclidean', etc.
         print('Original ', type(M), M.shape)
+        #D = pdist(M, norm) #Computes all the pairwise distances.
+        #SD = squareform(D) #Forms a matrix from the vector with pairwise distances.
+        ''' 
         # Row pairwise distance.
         R = M.reshape((M.shape[0]*M.shape[1], 1))
         print('Reshaping', R.shape)
-        PD = pdist(R, norm)
+        PD = pdist(R, 'euclidean')
+        #PD = cdist(R,R, 'euclidean')
         print('pdist', PD.shape)
         SD = squareform(PD)
-        SD = np.tril(SD) # Take lower triangular matrix.
+        #SD = np.tril(SD) # Take lower triangular matrix.
+        SD = np.triu(SD) # Take lower triangular matrix.
+        print('SD', type(SD), SD.shape)
+        '''
+        '''
+        R = M.reshape((M.shape[0]*M.shape[1], 1))
+        SD = distance_matrix(R,R,2)
+        '''
+
+        R = M.reshape((M.shape[0]*M.shape[1], 1))
+        print('Reshaping', R.shape)
+        PD = pdist(R, 'euclidean')
+        #PD = pdist(R, 'cityblock')
+
+        #PD = pdist(R, lambda u, v: abs(u-v))
+        #PD = pdist(R, lambda u, v: min(u,v))
+
+        SD = squareform(PD, 'tomatrix')
         print('SD', type(SD), SD.shape)
         return SD
 
 #............................
     def PH_func_call(self, data, norm, maxdim):
         X = self.compute_dist_mat(data, norm) #Computes distance matrix from a squared scalar field.
+        #print('X ', np.argwhere(np.isnan(X)))
         start = time.time()
-        result = ripser(X, distance_matrix=True, maxdim=maxdim, thresh=1.0) # Set threshold to speed up computations. 
+        #result = ripser(X, distance_matrix=True, maxdim=maxdim, thresh=1.0) # Set threshold to speed up computations. 
+        result = []
+        #result = ripser(X, distance_matrix=True, maxdim=1) # Set threshold to speed up computations. 
+        result = ripser(X, distance_matrix=True, maxdim=1, thresh=1.0) # Set threshold to speed up computations. 
         end = time.time()
         print('ripser time %i' %(end-start))
         dgms = result['dgms']
+        print('dgms ', dgms)
         return dgms
 
 #............................
@@ -167,37 +198,28 @@ class PH_class(object):
         self.save_dict_to_hdf5_(self.l_2D_hist, input_file, file_part, frame_id)
 
 #............................
-    def save_barcodes(self, file_idx):
-        for i in l_dgms:
-            dgm_H_0 = l_dgms[i][0][:]
-            dgm_H_1 = l_dgms[i][1][:]
+    def save_barcodes(self, file_idx, idx):
+        for dgm in self.l_dgms:
+            print('Diagram ', dgm)
+            dgm_H_0 = dgm[0][:-1]
+            dgm_H_1 = dgm[1][:]
+            print('H0 ', dgm_H_0)
             #USE np.savez()
-            np.savez('PH0_' + str(file_idx) + '.npz', dgm_H_0)
-            np.savez('PH1_' + str(file_idx) + '.npz', dgm_H_1)
+            np.savez('PH0_' + str(file_idx) + '_' + str(idx) + '.npz', dgm_H_0)
+            np.savez('PH1_' + str(file_idx) + '_' + str(idx) + '.npz', dgm_H_1)
         
         print('[+] save_barcodes -- done')
 
 #............................
-    def save_histograms(self, file_idx):
-        for i in l_2D_hist:
-            h1 = 
-            h2 = l_2D_hist[i]
+    def save_histograms(self, file_idx, idx):
+        for i in range(0, len(self.l_2D_hist)):
+            h1 = self.l_1D_hist[i] 
+            h2 = self.l_2D_hist[i]
             #USE np.savez()
-            np.savez('H1_' + str(file_idx) + '.npz', h1)
-            np.savez('H2_' + str(file_idx) + '.npz', h2)
+            np.savez('H1_' + str(file_idx) + '_' + str(idx) + '.npz', h1)
+            np.savez('H2_' + str(file_idx) + '_' + str(idx) + '.npz', h2)
         
         print('[+] save_histograms -- done')
-
-#............................
-    def k_subimages_PH(self, I): 
-        dgms = np.ndarray([])
-        dgms = self.PH_func_call(I, self.norm, self.maxdim) #Computes H1 homologies.
-        self.l_dgms.append(dgms)
-        
-        1d_hist = self.one_dim_hist_data(dgms)
-        2d_hist = self.hist_data(dgms) #Computes 2d histogram.
-
-        return 1d_hist, 2d_hist
 
 #............................
     def generate_data_list_old(self, idx, sub_img_id):
@@ -222,7 +244,8 @@ class PH_class(object):
         for i in range(0, len(self.l_fns)): 
             print('File:', self.l_fns[i])
             fd=self.read_netcdf_file(self.l_fns[i], self.varname)
-            frame = fd[idx][0]
+            #frame = fd[idx][0]
+            frame = fd[idx]
             print('Global img shape: ', frame.shape)
             print('Timestep: %d' % idx)
             self.l_global_imgs.append(frame)
@@ -233,52 +256,61 @@ class PH_class(object):
         print('[+] %i 2D hists: generate_data_list -- done' %len(self.l_2D_hist))
 
 #............................
-    def generate_data_list(self):
-        print('File:', self.l_fns)
-        data = np.load(self.l_fns)
-        fd = data.files
-        for i in fd:
-            frame = data[i]
-            print('Global img shape: ', frame.shape)
-            print('Timestep: %d' % i)
-            self.l_global_imgs.append(frame)
-            img = self.preprocessing_norm_stand(frame) # Normalizes & standardizes data to get rid of noise.
-            imgs = self.extract_subimages(img, 4) # Extracts n images per hemisphere (here, 4*2 = 8 images in total).
-            self.l_imgs.extend(imgs) # Extracts 8 subimages.
+    def k_subimages_PH(self, I): 
+        #dgms = np.ndarray([])
+        #print('I ', I)
+        dgms = self.PH_func_call(I, self.norm, self.maxdim) #Computes H1 homologies.
+        print('Ripser output: ', dgms[1][:])
+        self.l_dgms.append(dgms)
+        
+        hist_1D = self.one_dim_hist_data(dgms)
+        hist_2D = self.hist_data(dgms) #Computes 2d histogram.
 
-            all_histograms = [self.k_subimages_PH(self.preprocessing_norm_stand(imgs[k])) for k in range(0, len(imgs))]
-            for hist in all_histograms:
-                self.l_1D_hist.extend(hist[0]) 
-                self.l_2D_hist.extend(hist[1]) 
+        return hist_1D, hist_2D
+
+#............................
+    def generate_data_list(self, idx):
+        print('File:', self.l_fns)
+        data = np.load(self.l_fns[0])
+        fd = data.files
+        #for i in fd[idx]:   # CHANGE THIS LINE IF DEBUGGING.
+        #frame = data[i]
+        frame = data[fd[idx]]
+        print('Global img shape: ', frame.shape)
+        print('Timestep: %s' % fd[idx])
+        self.l_global_imgs.append(frame)
+        img = self.preprocessing_norm_stand(frame) # Normalizes & standardizes data to get rid of noise.
+        imgs = self.extract_subimages(img, 4) # Extracts n images per hemisphere (here, 4*2 = 8 images in total).
+        #print('imgs ', imgs[0])
+        self.l_imgs.extend(imgs) # Extracts 8 subimages.
+        
+        #all_histograms = [self.k_subimages_PH(imgs[k]) for k in range(0, len(imgs))]
+        all_histograms = [self.k_subimages_PH(self.preprocessing_norm_stand(imgs[k])) for k in range(0, len(imgs))]
+        for hist in all_histograms:
+            self.l_1D_hist.extend(hist[0]) 
+            self.l_2D_hist.extend(hist[1]) 
             
         print('[+] 1D & 2D hists: generate_data_list -- done')
 
 if __name__ == "__main__":
 
+    proc_id = 0#int(os.environ['SLURM_PROCID']) # CHANGE IT TO ZERO FOR TESTING/DEBUGGING.
+
+    # Preprocess input args.
     input_file = sys.argv[1]
-
-    #f_idx = int(sys.argv[2]) # SLURM_ARRAY_TASK_ID
-    #proc_id = int(os.environ['SLURM_PROCID']) # CHANGE IT TO ZERO FOR TESTING/DEBUGGING.
-    #frame_id = int(proc_id + f_idx*32)
-
-    #print("INPUT FILE: %s; FILE IDX: %d; PROC ID: %d; FRAME ID: %d" %(input_file, f_idx, proc_id, frame_id))
-
-    #if frame_id > 1459: # Catch exception when frame_id is greater than number of frames in netCDF file.
-    #    print("[-] Not needed ------ INPUT FILE: %s; FILE IDX: %d; PROC ID: %d; FRAME ID: %d" %(input_file, f_idx, proc_id, frame_id))
-    #    sys.exit(0) 
-
-    file_idx = input_file.split('_')[3][16:-5]
+    file_idx = input_file.split('_')[3]
+    print('[+] ====== ' + sys.argv[0] + ' Input file: ' + input_file + ' File index: ' + file_idx + ' Process index: ' + str(proc_id) + ' ======')
 
     ph = PH_class() # Optionals: 1) var name; 2) metric pairwise dist matrix; 3) max homology group dim.
 
     # Generate dataset: (X - features, Y - labels).
-    ph.l_fns.append(input_file)
-    ph.generate_data_list()
-    print('[*] ======Task %s; complete======' %(input_file))
+    #ph.l_fns.append(input_file)
+    ph.l_fns.append('/global/cscratch1/sd/muszyng/ethz_data/ecmwf_data/ECMWF_1979_Jan.nc')
+    ph.generate_data_list__oldv2(proc_id)
+    #ph.generate_data_list(proc_id)
 
-    ph.save_barcodes(file_idx)
-    ph.save_histograms(file_idx)
-
-    #'''TO DO: saving files'''
-    #ph.save_dataset_hdf5_(input_file, file_part, frame_id) # Save dataset to hdf5 format: (train, val, test).
+    # Save files to .npz format. 
+    ph.save_barcodes(file_idx, proc_id)
+    ph.save_histograms(file_idx, proc_id)
+    print('[*] ====== Task complete for file %s ======' %(input_file))
 
