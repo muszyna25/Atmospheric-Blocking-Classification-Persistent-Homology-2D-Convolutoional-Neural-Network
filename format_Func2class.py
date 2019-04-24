@@ -49,13 +49,13 @@ args=get_parser()
 gra=Plotter_Func2class(args)
 
 #............................
-data_path='/global/cscratch1/sd/muszyng/ethz_data/ecmwf_data/' # Path to netCDF files directory.
-bin_mask_path='/global/cscratch1/sd/muszyng/ethz_data/labels/' # Path to binary mask files directory.
+#data_path='/global/cscratch1/sd/muszyng/ethz_data/ecmwf_data/' # Path to netCDF files directory.
+#bin_mask_path='/global/cscratch1/sd/muszyng/ethz_data/labels/' # Path to binary mask files directory.
 
 #............................
-ph=Persist_Homologyclass(data_path, bin_mask_path) # Optional: 1) var name; 2) metric pairwise dist matrix; 3) max homology group dim.
+#ph=Persist_Homologyclass(data_path, bin_mask_path) # Optional: 1) var name; 2) metric pairwise dist matrix; 3) max homology group dim.
 
-ph.generate_dataset() # Generate dataset: (X - features, Y - labels).
+#ph.generate_dataset() # Generate dataset: (X - features, Y - labels).
 #ph.save_dataset_hdf5() # Save dataset to hdf5 format: (train, val, test).
 
 #............................
@@ -99,7 +99,7 @@ gra.plot_multiple_2d_histograms(ph, range(8))
 #out=ph.read_netcdf_file_('/global/cscratch1/sd/muszyng/ethz_data/ecmwf_download/batch_scripts/', 'ERA_INTERIM_1979.nc', 'pv') #Variables names: e.g., 'lon', 'lat', 'prw'
 #outputListData=[np.random.random((100, 100)) for i in range(1888)] # List of fake 2d histograms (10x10). 
 
-'''
+
 deep=Deep_Func2class(**vars(args))
 deep.read_mnist_raw()
 deep.select_digits_and_split([5,6]) # give 2 digits you want to train on
@@ -109,5 +109,5 @@ gra.plot_input(deep.data['val'],range(10),'digit',6)
 if args.funcDim=='func1dim':
     gra.plot_input(deep.data['val'],range(10),'func',7)
 gra.display_all('form') #This is to plot all collected figures.
-'''
+
 

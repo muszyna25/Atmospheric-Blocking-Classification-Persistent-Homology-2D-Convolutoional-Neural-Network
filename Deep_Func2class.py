@@ -129,9 +129,11 @@ class Deep_Func2class(object):
 #............................
     def load_input_hdf5(self,domL):
         for dom in domL:
-            inpF=self.dataPath+'/'+self.prjName+'_%s.%s.hd5'%(dom,self.funcDim)
-            if self.dataPath=='data2':
-                inpF=self.dataPath+'/tzfunc2class_%s.hd5'%(dom)
+            #inpF=self.dataPath+'/'+self.prjName+'_%s.%s.hd5'%(dom,self.funcDim)
+            #if self.dataPath=='data2':
+            #if self.dataPath=='':
+            inpF=self.dataPath+'/%s.hd5'%(dom)
+            #inpF=self.dataPath+'/tzfunc2class_%s.hd5'%(dom)
 
             print('load hdf5:',inpF)
             h5f = h5py.File(inpF, 'r')
@@ -175,20 +177,16 @@ class Deep_Func2class(object):
 
         dropFrac=args.dropFrac
         sh1=self.data['train']['X'].shape
-        if len(sh1)==2:
-            xa = Input(shape=(sh1[1],),name='inp1')     
-        if len(sh1)==3:
-            xa = Input(shape=(sh1[1],sh1[2],),name='inp1')     
-   
-        print('build_model inp1:',sh1,'design=',self.modelDesign,' xa:',xa.get_shape())
-
+        
+        print('build_model inp1:',sh1,'design=',self.modelDesign)
 
         if self.modelDesign=='cnn1d': # . . . . . . . . . . . . . . . 
+            xa = Input(shape=(sh1[1],),name='inp1d')
             h=Reshape((sh1[1],1))(xa)
             kernel = 5
             pool_len = 3 # how much time_bins get reduced per pooling
-            cnnDim=[2,4,6,8]; numCnn=len(cnnDim)
-            print(' cnnDim:',cnnDim)
+            cnnDim=[2,4]; numCnn=len(cnnDim)
+            print(' cnn1Dim:',cnnDim)
             
             for i in range(numCnn):
                 dim=cnnDim[i]
@@ -199,11 +197,12 @@ class Deep_Func2class(object):
             h=Flatten(name='to_1d')(h)
 
         if self.modelDesign=='cnn2d': # . . . . . . . . . . . . . . . 
+            xa = Input(shape=(sh1[1],sh1[2],),name='inp2d')      
             h=Reshape((sh1[1],sh1[2],1))(xa)
             kernel = 3
             pool_len = 2 # how much time_bins get reduced per pooling
             cnnDim=[4,8]; numCnn=len(cnnDim)
-            print(' cnnDim:',cnnDim)
+            print(' cnn2Dim:',cnnDim)
             
             for i in range(numCnn):
                 dim=cnnDim[i]
