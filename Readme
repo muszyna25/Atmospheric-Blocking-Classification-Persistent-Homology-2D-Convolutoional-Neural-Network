@@ -3,6 +3,10 @@ INSTRUCTION:
 
 source mySetup_nersc.source
 
+or 
+
+module load tensorflow/intel-1.12.0-py36
+
 1)====== prepare train/val/test data set
 mkdir out data
 ./format_Func2class.py
