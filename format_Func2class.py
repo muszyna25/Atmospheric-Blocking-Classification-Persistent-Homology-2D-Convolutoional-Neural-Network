@@ -5,9 +5,6 @@ write 6 tensors: (train,val,test) * (X,Y) in hd5
 
 """
 
-__author__ = "Jan Balewski"
-__email__ = "janstar1122@gmail.com"
-
 from Plotter_Func2class import Plotter_Func2class
 from Deep_Func2class import Deep_Func2class
 from Persist_Homologyclass import Persist_Homologyclass
