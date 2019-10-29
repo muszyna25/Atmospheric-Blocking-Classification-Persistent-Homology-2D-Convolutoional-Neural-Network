@@ -15,11 +15,6 @@ import numpy as np
 import h5py
 print('deep-libs imported elaT=%.1f sec'%(time.time() - start))
 
-__author__ = "Jan Balewski"
-__email__ = "janstar1122@gmail.com"
-
-#............................
-#............................
 #............................
 from keras.callbacks import Callback
 import keras.backend as K
