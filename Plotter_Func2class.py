@@ -8,11 +8,6 @@ import math
 from matplotlib import cm as cmap
 import sys
 
-__author__ = "Jan Balewski"
-__email__ = "janstar1122@gmail.com"
-
-#............................
-#............................
 #............................
 class Plotter_Func2class(object):
     """Graphic ops related to formatin,training, eval of deep net """
