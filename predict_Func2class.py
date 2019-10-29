@@ -5,9 +5,6 @@ read test data from HD5
 evaluate test data 
 """
 
-__author__ = "Jan Balewski"
-__email__ = "janstar1122@gmail.com"
-
 from Plotter_Func2class import Plotter_Func2class
 from Deep_Func2class import Deep_Func2class
 
